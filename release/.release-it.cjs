@@ -48,7 +48,7 @@ module.exports = {
     publish: false,
   },
   github: {
-    release,
+    release:false,
     releaseName: 'v${version}',
     assets: [`./release/${releasedPluginName}.zip`], // relative path
     web: false,
