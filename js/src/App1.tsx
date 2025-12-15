@@ -1,8 +1,9 @@
 import '@/assets/scss/index.scss'
 import DefaultPage from './pages'
+import Flow from './pages/Flow'
 
 function App() {
-  return <DefaultPage />
+  return <Flow />
 }
 
 export default App

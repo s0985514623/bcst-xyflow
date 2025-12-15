@@ -223,6 +223,7 @@ const initialEdges = [
 ]
 
 export default function Flow() {
+    console.log('Flow')
     const [
         nodes,
         setNodes,
