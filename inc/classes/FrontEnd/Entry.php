@@ -18,7 +18,8 @@ final class Entry {
 	 * Constructor
 	 */
 	public function __construct() {
-		\add_action( 'wp_footer', [ $this, 'render_app' ] );
+		// \add_action( 'wp_footer', [ $this, 'render_app' ] );
+		add_shortcode( 'flow', [ $this, 'render_flow' ] );
 	}
 
 	/**
@@ -27,5 +28,13 @@ final class Entry {
 	public function render_app(): void {
 		// phpcs:ignore
 		echo '<div id="my_app"></div>';
+	}
+
+	/**
+	 * Render application's markup
+	 */
+	public function render_flow() {
+		// phpcs:ignore
+		return '<div id="my_app"></div>';
 	}
 }

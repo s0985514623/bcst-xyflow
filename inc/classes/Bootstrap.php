@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Bootstrap
  */
 
-declare (strict_types = 1);
+declare(strict_types=1);
 
 namespace J7\WpReactPlugin;
 
@@ -14,6 +15,7 @@ use J7WpReactPlugin\vendor\Kucrut\Vite;
  * Class Bootstrap
  */
 final class Bootstrap {
+
 	use \J7WpReactPlugin\vendor\J7\WpUtils\Traits\SingletonTrait;
 
 	/**
@@ -23,8 +25,8 @@ final class Bootstrap {
 		Admin\CPT::instance();
 		FrontEnd\Entry::instance();
 
-		\add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_script' ], 99 );
-		\add_action( 'wp_enqueue_scripts', [ $this, 'frontend_enqueue_script' ], 99 );
+		\add_action('admin_enqueue_scripts', [ $this, 'admin_enqueue_script' ], 99);
+		\add_action('wp_enqueue_scripts', [ $this, 'frontend_enqueue_script' ], 99);
 	}
 
 	/**
@@ -68,18 +70,18 @@ final class Bootstrap {
 		);
 
 		$post_id   = \get_the_ID();
-		$permalink = \get_permalink( $post_id );
+		$permalink = \get_permalink($post_id);
 
 		\wp_localize_script(
 			Plugin::$kebab,
 			Plugin::$snake . '_data',
 			[
 				'env' => [
-					'siteUrl'       => \untrailingslashit( \site_url() ),
-					'ajaxUrl'       => \untrailingslashit( \admin_url( 'admin-ajax.php' ) ),
+					'siteUrl'       => \untrailingslashit(\site_url()),
+					'ajaxUrl'       => \untrailingslashit(\admin_url('admin-ajax.php')),
 					'userId'        => \wp_get_current_user()->data->ID ?? null,
 					'postId'        => $post_id,
-					'permalink'     => \untrailingslashit( $permalink ),
+					'permalink'     => \untrailingslashit($permalink),
 					'APP_NAME'      => Plugin::$app_name,
 					'KEBAB'         => Plugin::$kebab,
 					'SNAKE'         => Plugin::$snake,
@@ -87,7 +89,7 @@ final class Bootstrap {
 					'APP1_SELECTOR' => Base::APP1_SELECTOR,
 					'APP2_SELECTOR' => Base::APP2_SELECTOR,
 					'API_TIMEOUT'   => Base::API_TIMEOUT,
-					'nonce'         => \wp_create_nonce( Plugin::$kebab ),
+					'nonce'         => \wp_create_nonce(Plugin::$kebab),
 				],
 			]
 		);
@@ -96,8 +98,8 @@ final class Bootstrap {
 			Plugin::$kebab,
 			'wpApiSettings',
 			[
-				'root'  => \untrailingslashit( \esc_url_raw( rest_url() ) ),
-				'nonce' => \wp_create_nonce( 'wp_rest' ),
+				'root'  => \untrailingslashit(\esc_url_raw(rest_url())),
+				'nonce' => \wp_create_nonce('wp_rest'),
 			]
 		);
 	}

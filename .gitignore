@@ -34,3 +34,5 @@ release/*
 /vendor/
 
 composer.lock
+
+*.pem

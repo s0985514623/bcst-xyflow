@@ -1,16 +1,16 @@
 <?php
 /**
- * Plugin Name:       WP React Plugin (DEV)
- * Plugin URI:        https://github.com/j7-dev/wp-react-plugin
- * Description:       WP React Plugin is a boilerplate for creating a WordPress plugin with React, Tailwind, TypeScript, React Query v4, SCSS and Vite.
- * Version:           4.0.1
+ * Plugin Name:       BCST XYFlow
+ * Plugin URI:        https://github.com/s0985514623/bcst-xyflow
+ * Description:       BCST XYFlow is a plugin for creating a WordPress plugin with React, Tailwind, TypeScript, React Query v4, SCSS and Vite.
+ * Version:           1.0.0
  * Requires at least: 5.7
  * Requires PHP:      8.0
- * Author:            J7
- * Author URI:        https://github.com/j7-dev
+ * Author:            Ren
+ * Author URI:        https://github.com/s0985514623
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       wp_react_plugin
+ * Text Domain:       bcst-xyflow
  * Domain Path:       /languages
  * Tags: vite, react, tailwind, typescript, react-query, scss, WordPress, WordPress plugin
  */
@@ -52,8 +52,8 @@ if ( ! \class_exists( 'J7\WpReactPlugin\Plugin' ) ) {
 
 			$this->init(
 				[
-					'app_name'    => 'My App',
-					'github_repo' => 'https://github.com/j7-dev/wp-react-plugin',
+					'app_name'    => 'BCST XYFlow',
+					'github_repo' => 'https://github.com/s0985514623/bcst-xyflow',
 					'callback'    => [ Bootstrap::class, 'instance' ],
 				]
 			);

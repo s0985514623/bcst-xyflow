@@ -4,6 +4,7 @@ module.exports = {
 	important: true,
 	corePlugins: {
 		preflight: false,
+		container: false, // conflicted with WordPress
 	},
 	content: ['./js/src/**/*.{js,ts,jsx,tsx}', './inc/**/*.php'],
 	theme: {
@@ -40,10 +41,13 @@ module.exports = {
 				'.tw-fixed': {
 					position: 'fixed',
 				},
+				'.tw-inline': {
+					display: 'inline'
+				}
 			}
 			addUtilities(newUtilities, ['responsive', 'hover'])
 		},
 	],
 	safelist: [],
-	blocklist: ['fixed', 'columns-1', 'columns-2', 'hidden'],
+	blocklist: ['fixed', 'columns-1', 'columns-2', 'hidden', 'inline'],
 }
