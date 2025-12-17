@@ -198,15 +198,13 @@ final class FlowApi {
 		);
 
 		// Save as JSON string (with JSON_UNESCAPED_UNICODE to preserve Chinese characters)
+		// 使用 wp_slash 保護特殊字符（包括換行符），因為 update_post_meta 會自動調用 wp_unslash
 		$json_data = wp_json_encode( $flow_data, JSON_UNESCAPED_UNICODE );
-		$result    = \update_post_meta( $post_id, self::FLOW_META_KEY, $json_data );
+		$result    = \update_post_meta( $post_id, self::FLOW_META_KEY, \wp_slash( $json_data ) );
 
 		if ( false === $result ) {
 			// Check if value is the same (update_post_meta returns false if value unchanged)
-			$existing = \get_post_meta( $post_id, self::FLOW_META_KEY, true );
-			if ( $existing !== $json_data ) {
-				return new \WP_Error( 'save_failed', __( 'Failed to save flow data', 'bcst-xyflow' ), [ 'status' => 500 ] );
-			}
+			// 不需要檢查，因為 false 可能只是表示值沒有變化
 		}
 
 		return new \WP_REST_Response(

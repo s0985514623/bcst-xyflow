@@ -2,6 +2,7 @@ import { memo } from 'react'
 import { Handle, Position } from '@xyflow/react'
 import {
   DEFAULT_NODE_COLOR,
+  processLabel,
   type EditableNodeData,
   type NodeColor,
 } from './EditableNode'
@@ -17,6 +18,9 @@ interface ReadOnlyNodeProps {
 function ReadOnlyNode({ data }: ReadOnlyNodeProps) {
   // Get current color or default
   const currentColor: NodeColor = data?.color || DEFAULT_NODE_COLOR
+
+  // 處理標籤文字
+  const displayLabel = processLabel(data?.label)
 
   // 判斷是否為完全透明
   const isFullyTransparent =
@@ -99,8 +103,11 @@ function ReadOnlyNode({ data }: ReadOnlyNodeProps) {
       />
 
       <div className="node-content">
-        <span className="node-label" style={{ color: currentColor.text }}>
-          {data?.label || '未命名'}
+        <span
+          className="node-label"
+          style={{ color: currentColor.text, whiteSpace: 'pre-wrap' }}
+        >
+          {displayLabel}
         </span>
       </div>
     </div>

@@ -110,12 +110,22 @@ function generateColorFromHex(hexColor: string, alpha: number = 1): NodeColor {
 }
 
 /**
+ * 處理文字中的換行符
+ * 將字面的 \n 字串轉換為實際的換行符
+ */
+export function processLabel(label: string | undefined): string {
+  if (!label) return '未命名'
+  // 將字面的 \n 轉換為實際換行符
+  return label.replace(/\\n/g, '\n')
+}
+
+/**
  * Editable Node Component - 可編輯標籤的節點
  */
 function EditableNode({ id, data, selected }: EditableNodeProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
-  const [inputValue, setInputValue] = useState(data?.label || '')
+  const [inputValue, setInputValue] = useState(processLabel(data?.label))
   const colorInputRef = useRef<HTMLInputElement>(null)
   const { setNodes, deleteElements } = useReactFlow()
 
@@ -127,7 +137,7 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
 
   const handleDoubleClick = useCallback(() => {
     setIsEditing(true)
-    setInputValue(data?.label || '')
+    setInputValue(processLabel(data?.label))
   }, [data?.label])
 
   const handleBlur = useCallback(() => {
@@ -144,13 +154,18 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') {
+      // Ctrl+Enter 或 Cmd+Enter 保存
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
         handleBlur()
       }
+      // Escape 取消編輯
       if (e.key === 'Escape') {
         setIsEditing(false)
-        setInputValue(data?.label || '')
+        setInputValue(processLabel(data?.label))
       }
+      // 阻止事件冒泡，避免觸發 ReactFlow 的快捷鍵
+      e.stopPropagation()
     },
     [handleBlur, data?.label],
   )
@@ -419,18 +434,22 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
 
       <div className="node-content" onDoubleClick={handleDoubleClick}>
         {isEditing ? (
-          <input
-            type="text"
+          <textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
-            className="node-input"
+            className="node-input node-textarea"
             autoFocus
+            rows={3}
+            placeholder="輸入文字，按 Enter 換行"
           />
         ) : (
-          <span className="node-label" style={{ color: currentColor.text }}>
-            {data?.label || '未命名'}
+          <span
+            className="node-label"
+            style={{ color: currentColor.text, whiteSpace: 'pre-wrap' }}
+          >
+            {processLabel(data?.label)}
           </span>
         )}
       </div>

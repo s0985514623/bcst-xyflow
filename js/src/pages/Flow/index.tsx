@@ -270,7 +270,7 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
       {!readOnly ? (
         <div className="xyflow-tips">
           <span>
-            💡 提示：雙擊節點編輯文字 | 點擊調色盤換顏色 | 拖曳連接點建立連結 | Delete 鍵刪除
+            💡 提示：雙擊編輯文字（Enter 換行，Ctrl+Enter 保存）| 調色盤換顏色 | 拖曳連接點建立連結
           </span>
         </div>
       ) : (

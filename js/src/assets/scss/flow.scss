@@ -185,6 +185,8 @@
     font-weight: 500;
     color: #334155;
     word-break: break-word;
+    white-space: pre-wrap; // 保留換行
+    line-height: 1.4;
   }
 
   .node-input {
@@ -201,6 +203,15 @@
     &:focus {
       box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
     }
+  }
+
+  // 多行文字輸入框
+  .node-textarea {
+    resize: none;
+    min-height: 60px;
+    max-height: 150px;
+    line-height: 1.4;
+    font-family: inherit;
   }
 
   // Node toolbar (contains color picker and delete button)
