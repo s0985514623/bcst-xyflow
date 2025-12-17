@@ -51,19 +51,20 @@ const defaultEdgeOptions = {
 
 interface FlowEditorProps {
   readOnly?: boolean
+  postId?: number
 }
 
 // 主要 Flow 編輯器組件
-function FlowEditor({ readOnly = false }: FlowEditorProps) {
+function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
   const { getViewport, setViewport, fitView } = useReactFlow()
 
-  // Fetch flow data from WordPress
-  const { data: flowResponse, isLoading, isError, error } = useGetFlowData()
+  // Fetch flow data from WordPress (使用傳入的 postId 或全域設定)
+  const { data: flowResponse, isLoading, isError, error } = useGetFlowData(postId)
 
   // Save mutation (only used in edit mode)
-  const { mutate: saveFlow, isLoading: isSaving } = useSaveFlowData()
+  const { mutate: saveFlow, isLoading: isSaving } = useSaveFlowData(postId)
 
   // Select node types based on mode
   const nodeTypes = useMemo(
@@ -283,13 +284,14 @@ function FlowEditor({ readOnly = false }: FlowEditorProps) {
 
 interface FlowProps {
   readOnly?: boolean
+  postId?: number
 }
 
 // Wrapper component with ReactFlowProvider
-export default function Flow({ readOnly = false }: FlowProps) {
+export default function Flow({ readOnly = false, postId }: FlowProps) {
   return (
     <ReactFlowProvider>
-      <FlowEditor readOnly={readOnly} />
+      <FlowEditor readOnly={readOnly} postId={postId} />
     </ReactFlowProvider>
   )
 }

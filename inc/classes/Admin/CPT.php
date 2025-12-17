@@ -121,16 +121,16 @@ final class CPT {
 			'description'           => '',
 			'public'                => true,
 			'hierarchical'          => false,
-			'exclude_from_search'   => true,
+			'exclude_from_search'   => false, // 允許被搜尋（包括 Elementor）
 			'publicly_queryable'    => true,
 			'show_ui'               => true,
-			'show_in_nav_menus'     => false,
-			'show_in_admin_bar'     => false,
+			'show_in_nav_menus'     => true,  // 允許在導航選單中顯示
+			'show_in_admin_bar'     => true,  // 允許在管理列中顯示
 			'show_in_rest'          => true,
-			'query_var'             => false,
+			'query_var'             => true,  // 啟用查詢變數（Elementor 需要）
 			'can_export'            => true,
 			'delete_with_user'      => true,
-			'has_archive'           => false,
+			'has_archive'           => true,  // 啟用存檔頁面
 			'rest_base'             => '',
 			'show_in_menu'          => true,
 			'menu_position'         => 6,
@@ -140,6 +140,7 @@ final class CPT {
 			'taxonomies'            => [],
 			'rest_controller_class' => 'WP_REST_Posts_Controller',
 			'rewrite'               => [
+				'slug'       => 'bcst',
 				'with_front' => true,
 			],
 		];

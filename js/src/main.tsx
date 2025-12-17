@@ -17,33 +17,63 @@ const queryClient = new QueryClient({
   },
 })
 
+// 前台：支援短碼指定 post ID（class 選擇器）
+const shortcodeNodes = document.querySelectorAll('.bcst-xyflow-shortcode')
+
+// 前台：原本的 app1 選擇器（保持向後相容）
 const app1Nodes = document.querySelectorAll(app1Selector)
+
+// 後台：metabox 選擇器
 const app2Nodes = document.querySelectorAll(app2Selector)
 
-const mapping = [
-  {
-    els: app1Nodes,
-    App: App1,
-  },
-  {
-    els: app2Nodes,
-    App: App2,
-  },
-]
+// 渲染短碼（支援指定 post ID）
+if (shortcodeNodes.length > 0) {
+  shortcodeNodes.forEach((el) => {
+    const postId = el.getAttribute('data-post-id')
+    ReactDOM.createRoot(el).render(
+      <React.StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <StyleProvider hashPriority="high">
+            <App1 postId={postId ? parseInt(postId, 10) : undefined} />
+          </StyleProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </React.StrictMode>,
+    )
+  })
+}
 
-mapping.forEach(({ els, App }) => {
-  if (!!els) {
-    els.forEach((el) => {
-      ReactDOM.createRoot(el).render(
-        <React.StrictMode>
-          <QueryClientProvider client={queryClient}>
-            <StyleProvider hashPriority="high">
-              <App />
-            </StyleProvider>
-            <ReactQueryDevtools initialIsOpen={false} />
-          </QueryClientProvider>
-        </React.StrictMode>,
-      )
-    })
-  }
-})
+// 渲染原本的 app1（向後相容）
+if (app1Nodes.length > 0) {
+  app1Nodes.forEach((el) => {
+    // 檢查是否已經被短碼渲染過
+    if (el.classList.contains('bcst-xyflow-shortcode')) return
+
+    ReactDOM.createRoot(el).render(
+      <React.StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <StyleProvider hashPriority="high">
+            <App1 />
+          </StyleProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </React.StrictMode>,
+    )
+  })
+}
+
+// 渲染後台 metabox
+if (app2Nodes.length > 0) {
+  app2Nodes.forEach((el) => {
+    ReactDOM.createRoot(el).render(
+      <React.StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <StyleProvider hashPriority="high">
+            <App2 />
+          </StyleProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </React.StrictMode>,
+    )
+  })
+}

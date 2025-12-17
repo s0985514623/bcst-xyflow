@@ -38,12 +38,18 @@ final class Entry {
 	/**
 	 * Render Flow editor via shortcode [bcst_xyflow]
 	 *
+	 * Usage:
+	 * [bcst_xyflow] - 使用當前文章 ID
+	 * [bcst_xyflow id="123"] - 指定文章 ID
+	 * [bcst_xyflow id="123" height="800px" width="100%"] - 指定文章 ID 和尺寸
+	 *
 	 * @param array $atts Shortcode attributes.
 	 * @return string
 	 */
 	public function render_flow( $atts = [] ): string {
 		$atts = \shortcode_atts(
 			[
+				'id'     => '', // 可指定 post ID，留空則使用當前文章
 				'height' => '600px',
 				'width'  => '100%',
 			],
@@ -51,16 +57,28 @@ final class Entry {
 			'bcst_xyflow'
 		);
 
+		// 決定要使用的 post ID
+		$post_id = ! empty( $atts['id'] ) ? (int) $atts['id'] : \get_the_ID();
+
+		// 驗證 post ID 是否有效
+		if ( ! $post_id || ! \get_post( $post_id ) ) {
+			return '<div class="bcst-xyflow-error">無效的文章 ID</div>';
+		}
+
 		$style = sprintf(
 			'width: %s; height: %s;',
 			\esc_attr( $atts['width'] ),
 			\esc_attr( $atts['height'] )
 		);
 
+		// 使用唯一 ID 以支援同頁多個短碼
+		$container_id = Plugin::$snake . '_' . $post_id;
+
 		return sprintf(
-			'<div id="%s" style="%s"></div>',
-			\esc_attr( Plugin::$snake ),
-			$style
+			'<div id="%s" class="bcst-xyflow-shortcode" style="%s" data-post-id="%d"></div>',
+			\esc_attr( $container_id ),
+			$style,
+			$post_id
 		);
 	}
 
