@@ -1,9 +1,11 @@
 import '@/assets/scss/index.scss'
-import DefaultPage from './pages'
 import Flow from './pages/Flow'
 
+/**
+ * App1 - 前台顯示（只讀模式）
+ */
 function App() {
-  return <Flow />
+  return <Flow readOnly />
 }
 
 export default App

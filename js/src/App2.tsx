@@ -1,8 +1,11 @@
 import '@/assets/scss/index.scss'
-import DefaultPage from './pages'
+import Flow from './pages/Flow'
 
+/**
+ * App2 - 後台 Metabox（可編輯模式）
+ */
 function App2() {
-  return <DefaultPage />
+  return <Flow readOnly={false} />
 }
 
 export default App2

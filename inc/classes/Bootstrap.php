@@ -24,6 +24,7 @@ final class Bootstrap {
 	public function __construct() {
 		Admin\CPT::instance();
 		FrontEnd\Entry::instance();
+		Api\FlowApi::instance();
 
 		\add_action('admin_enqueue_scripts', [ $this, 'admin_enqueue_script' ], 99);
 		\add_action('wp_enqueue_scripts', [ $this, 'frontend_enqueue_script' ], 99);
@@ -69,8 +70,8 @@ final class Bootstrap {
 			]
 		);
 
-		$post_id   = \get_the_ID();
-		$permalink = \get_permalink($post_id);
+		$post_id   = $this->get_current_post_id();
+		$permalink = $post_id ? \get_permalink($post_id) : '';
 
 		\wp_localize_script(
 			Plugin::$kebab,
@@ -81,7 +82,7 @@ final class Bootstrap {
 					'ajaxUrl'       => \untrailingslashit(\admin_url('admin-ajax.php')),
 					'userId'        => \wp_get_current_user()->data->ID ?? null,
 					'postId'        => $post_id,
-					'permalink'     => \untrailingslashit($permalink),
+					'permalink'     => $permalink ? \untrailingslashit($permalink) : '',
 					'APP_NAME'      => Plugin::$app_name,
 					'KEBAB'         => Plugin::$kebab,
 					'SNAKE'         => Plugin::$snake,
@@ -98,9 +99,33 @@ final class Bootstrap {
 			Plugin::$kebab,
 			'wpApiSettings',
 			[
-				'root'  => \untrailingslashit(\esc_url_raw(rest_url())),
+				'root'  => \trailingslashit(\esc_url_raw(rest_url())),
 				'nonce' => \wp_create_nonce('wp_rest'),
 			]
 		);
+	}
+
+	/**
+	 * Get current post ID (works in both frontend and admin)
+	 *
+	 * @return int
+	 */
+	private function get_current_post_id(): int {
+		// Try to get from admin edit screen
+		if ( \is_admin() ) {
+			global $post;
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$post_id = isset( $_GET['post'] ) ? (int) $_GET['post'] : 0;
+			if ( $post_id ) {
+				return $post_id;
+			}
+			if ( $post && isset( $post->ID ) ) {
+				return (int) $post->ID;
+			}
+		}
+
+		// Frontend
+		$post_id = \get_the_ID();
+		return $post_id ? (int) $post_id : 0;
 	}
 }

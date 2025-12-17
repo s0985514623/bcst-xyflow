@@ -1,6 +1,6 @@
 <?php
 /**
- * Custom Post Type: My App
+ * Custom Post Type: BCST
  */
 
 declare(strict_types=1);
@@ -15,6 +15,11 @@ use J7\WpReactPlugin\Plugin;
  */
 final class CPT {
 	use \J7WpReactPlugin\vendor\J7\WpUtils\Traits\SingletonTrait;
+
+	/**
+	 * Post type slug
+	 */
+	public const POST_TYPE = 'bcst';
 
 	/**
 	 * Post metas
@@ -67,51 +72,51 @@ final class CPT {
 
 		// add {$this->post_type}/{slug}/test rewrite rule
 		if ( ! empty( $this->rewrite ) ) {
-			\add_rewrite_rule( '^my-app/([^/]+)/' . $this->rewrite['slug'] . '/?$', 'index.php?post_type=my-app&name=$matches[1]&' . $this->rewrite['var'] . '=1', 'top' );
+			\add_rewrite_rule( '^' . self::POST_TYPE . '/([^/]+)/' . $this->rewrite['slug'] . '/?$', 'index.php?post_type=' . self::POST_TYPE . '&name=$matches[1]&' . $this->rewrite['var'] . '=1', 'top' );
 			\flush_rewrite_rules();
 		}
 	}
 
 	/**
-	 * Register my-app custom post type
+	 * Register bcst custom post type
 	 */
 	public static function register_cpt(): void {
 
 		$labels = [
-			'name'                     => \esc_html__( 'my-app', 'wp_react_plugin' ),
-			'singular_name'            => \esc_html__( 'my-app', 'wp_react_plugin' ),
-			'add_new'                  => \esc_html__( 'Add new', 'wp_react_plugin' ),
-			'add_new_item'             => \esc_html__( 'Add new item', 'wp_react_plugin' ),
-			'edit_item'                => \esc_html__( 'Edit', 'wp_react_plugin' ),
-			'new_item'                 => \esc_html__( 'New', 'wp_react_plugin' ),
-			'view_item'                => \esc_html__( 'View', 'wp_react_plugin' ),
-			'view_items'               => \esc_html__( 'View', 'wp_react_plugin' ),
-			'search_items'             => \esc_html__( 'Search my-app', 'wp_react_plugin' ),
-			'not_found'                => \esc_html__( 'Not Found', 'wp_react_plugin' ),
-			'not_found_in_trash'       => \esc_html__( 'Not found in trash', 'wp_react_plugin' ),
-			'parent_item_colon'        => \esc_html__( 'Parent item', 'wp_react_plugin' ),
-			'all_items'                => \esc_html__( 'All', 'wp_react_plugin' ),
-			'archives'                 => \esc_html__( 'my-app archives', 'wp_react_plugin' ),
-			'attributes'               => \esc_html__( 'my-app attributes', 'wp_react_plugin' ),
-			'insert_into_item'         => \esc_html__( 'Insert to this my-app', 'wp_react_plugin' ),
-			'uploaded_to_this_item'    => \esc_html__( 'Uploaded to this my-app', 'wp_react_plugin' ),
-			'featured_image'           => \esc_html__( 'Featured image', 'wp_react_plugin' ),
-			'set_featured_image'       => \esc_html__( 'Set featured image', 'wp_react_plugin' ),
-			'remove_featured_image'    => \esc_html__( 'Remove featured image', 'wp_react_plugin' ),
-			'use_featured_image'       => \esc_html__( 'Use featured image', 'wp_react_plugin' ),
-			'menu_name'                => \esc_html__( 'my-app', 'wp_react_plugin' ),
-			'filter_items_list'        => \esc_html__( 'Filter my-app list', 'wp_react_plugin' ),
-			'filter_by_date'           => \esc_html__( 'Filter by date', 'wp_react_plugin' ),
-			'items_list_navigation'    => \esc_html__( 'my-app list navigation', 'wp_react_plugin' ),
-			'items_list'               => \esc_html__( 'my-app list', 'wp_react_plugin' ),
-			'item_published'           => \esc_html__( 'my-app published', 'wp_react_plugin' ),
-			'item_published_privately' => \esc_html__( 'my-app published privately', 'wp_react_plugin' ),
-			'item_reverted_to_draft'   => \esc_html__( 'my-app reverted to draft', 'wp_react_plugin' ),
-			'item_scheduled'           => \esc_html__( 'my-app scheduled', 'wp_react_plugin' ),
-			'item_updated'             => \esc_html__( 'my-app updated', 'wp_react_plugin' ),
+			'name'                     => \esc_html__( 'BCST', 'bcst-xyflow' ),
+			'singular_name'            => \esc_html__( 'BCST', 'bcst-xyflow' ),
+			'add_new'                  => \esc_html__( '新增', 'bcst-xyflow' ),
+			'add_new_item'             => \esc_html__( '新增項目', 'bcst-xyflow' ),
+			'edit_item'                => \esc_html__( '編輯', 'bcst-xyflow' ),
+			'new_item'                 => \esc_html__( '新增', 'bcst-xyflow' ),
+			'view_item'                => \esc_html__( '檢視', 'bcst-xyflow' ),
+			'view_items'               => \esc_html__( '檢視', 'bcst-xyflow' ),
+			'search_items'             => \esc_html__( '搜尋 BCST', 'bcst-xyflow' ),
+			'not_found'                => \esc_html__( '找不到項目', 'bcst-xyflow' ),
+			'not_found_in_trash'       => \esc_html__( '回收桶中找不到項目', 'bcst-xyflow' ),
+			'parent_item_colon'        => \esc_html__( '父項目', 'bcst-xyflow' ),
+			'all_items'                => \esc_html__( '全部', 'bcst-xyflow' ),
+			'archives'                 => \esc_html__( 'BCST 彙整', 'bcst-xyflow' ),
+			'attributes'               => \esc_html__( 'BCST 屬性', 'bcst-xyflow' ),
+			'insert_into_item'         => \esc_html__( '插入到此項目', 'bcst-xyflow' ),
+			'uploaded_to_this_item'    => \esc_html__( '上傳到此項目', 'bcst-xyflow' ),
+			'featured_image'           => \esc_html__( '精選圖片', 'bcst-xyflow' ),
+			'set_featured_image'       => \esc_html__( '設定精選圖片', 'bcst-xyflow' ),
+			'remove_featured_image'    => \esc_html__( '移除精選圖片', 'bcst-xyflow' ),
+			'use_featured_image'       => \esc_html__( '使用精選圖片', 'bcst-xyflow' ),
+			'menu_name'                => \esc_html__( 'BCST', 'bcst-xyflow' ),
+			'filter_items_list'        => \esc_html__( '篩選 BCST 列表', 'bcst-xyflow' ),
+			'filter_by_date'           => \esc_html__( '依日期篩選', 'bcst-xyflow' ),
+			'items_list_navigation'    => \esc_html__( 'BCST 列表導覽', 'bcst-xyflow' ),
+			'items_list'               => \esc_html__( 'BCST 列表', 'bcst-xyflow' ),
+			'item_published'           => \esc_html__( 'BCST 已發布', 'bcst-xyflow' ),
+			'item_published_privately' => \esc_html__( 'BCST 已私人發布', 'bcst-xyflow' ),
+			'item_reverted_to_draft'   => \esc_html__( 'BCST 已轉為草稿', 'bcst-xyflow' ),
+			'item_scheduled'           => \esc_html__( 'BCST 已排程', 'bcst-xyflow' ),
+			'item_updated'             => \esc_html__( 'BCST 已更新', 'bcst-xyflow' ),
 		];
 		$args   = [
-			'label'                 => \esc_html__( 'my-app', 'wp_react_plugin' ),
+			'label'                 => \esc_html__( 'BCST', 'bcst-xyflow' ),
 			'labels'                => $labels,
 			'description'           => '',
 			'public'                => true,
@@ -129,7 +134,7 @@ final class CPT {
 			'rest_base'             => '',
 			'show_in_menu'          => true,
 			'menu_position'         => 6,
-			'menu_icon'             => 'dashicons-store',
+			'menu_icon'             => 'dashicons-networking',
 			'capability_type'       => 'post',
 			'supports'              => [ 'title', 'editor', 'thumbnail', 'custom-fields', 'author' ],
 			'taxonomies'            => [],
@@ -139,7 +144,7 @@ final class CPT {
 			],
 		];
 
-		\register_post_type( 'my-app', $args );
+		\register_post_type( self::POST_TYPE, $args );
 	}
 
 	/**
@@ -174,10 +179,10 @@ final class CPT {
 	 * @param string $post_type Post type.
 	 */
 	public function add_metabox( string $post_type ): void {
-		if ( in_array( $post_type, [ Plugin::$kebab ] ) ) {
+		if ( self::POST_TYPE === $post_type ) {
 			\add_meta_box(
 				Plugin::$kebab . '-metabox',
-				__( 'My App', 'wp_react_plugin' ),
+				Plugin::$app_name,
 				[ $this, 'render_meta_box' ],
 				$post_type,
 				'advanced',
@@ -191,7 +196,7 @@ final class CPT {
 	 */
 	public function render_meta_box(): void {
 		// phpcs:ignore
-		echo '<div id="my_app_metabox"></div>';
+		echo '<div id="' . \esc_attr( Plugin::$snake . '_metabox' ) . '"></div>';
 	}
 
 
@@ -249,7 +254,7 @@ final class CPT {
 		$post_type = \sanitize_text_field( $_POST['post_type'] ?? '' );
 
 		// Check the user's permissions.
-		if ( 'my-app' !== $post_type ) {
+		if ( self::POST_TYPE !== $post_type ) {
 			return $post_id;
 		}
 
