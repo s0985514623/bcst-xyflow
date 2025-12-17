@@ -8,7 +8,7 @@ interface App1Props {
 /**
  * App1 - 前台顯示（只讀模式）
  *
- * @param {App1Props} props - 組件屬性
+ * @param {App1Props} props          - 組件屬性
  * @param {number}    [props.postId] - 可選的 post ID，若未提供則使用全域設定
  */
 function App1({ postId }: App1Props) {
