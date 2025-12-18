@@ -52,7 +52,7 @@ module.exports = {
     publish: false,
   },
   github: {
-    release,
+    release: false, // Temporarily disabled due to release-it bug
     releaseName: 'v${version}',
     assets: [`./release/${releasedPluginName}.zip`], // relative path
     web: false,
