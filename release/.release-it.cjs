@@ -17,9 +17,10 @@ const args = process.argv.slice(2) // remove 2 default args
 
 const release = !args.includes('--build-only') // Build release only or build release and push to github
 
-// Ensure token is loaded
-const token = process.env.GITHUB_TOKEN
-console.log('Token status:', token ? 'loaded' : 'NOT FOUND')
+// Debug all env vars that contain TOKEN
+console.log('=== DEBUG ENV ===')
+console.log('GITHUB_TOKEN:', process.env.GITHUB_TOKEN ? `${process.env.GITHUB_TOKEN.substring(0,10)}...` : 'NOT SET')
+console.log('All TOKEN env vars:', Object.keys(process.env).filter(k => k.includes('TOKEN')))
 
 module.exports = {
   releasedPluginName,
