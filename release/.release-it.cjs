@@ -52,7 +52,7 @@ module.exports = {
     releaseName: 'v${version}',
     assets: [`./release/${releasedPluginName}.zip`], // relative path
     web: false,
-    tokenRef: 'GITHUB_TOKEN',
+    token: process.env.GITHUB_TOKEN,
   },
   allowedItems: [
     'inc',
