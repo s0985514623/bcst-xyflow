@@ -1,5 +1,5 @@
 import { useCallback, useState, memo, useRef } from 'react'
-import { Handle, Position, useReactFlow } from '@xyflow/react'
+import { Handle, Position, useReactFlow, NodeResizer } from '@xyflow/react'
 
 // 預設顏色選項
 export const NODE_COLORS = [
@@ -27,6 +27,7 @@ export interface NodeColor {
 export interface EditableNodeData {
   label?: string
   color?: NodeColor
+  link?: string // 可選的連結 URL
 }
 
 interface EditableNodeProps {
@@ -125,7 +126,9 @@ export function processLabel(label: string | undefined): string {
 function EditableNode({ id, data, selected }: EditableNodeProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
+  const [showLinkEditor, setShowLinkEditor] = useState(false)
   const [inputValue, setInputValue] = useState(processLabel(data?.label))
+  const [linkValue, setLinkValue] = useState(data?.link || '')
   const colorInputRef = useRef<HTMLInputElement>(null)
   const { setNodes, deleteElements } = useReactFlow()
 
@@ -134,6 +137,9 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
 
   // 計算當前透明度
   const currentAlpha = extractAlpha(currentColor.bg)
+
+  // 當前連結
+  const currentLink = data?.link || ''
 
   const handleDoubleClick = useCallback(() => {
     setIsEditing(true)
@@ -251,7 +257,38 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
   const toggleColorPicker = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     setShowColorPicker((prev) => !prev)
+    setShowLinkEditor(false)
   }, [])
+
+  // 連結編輯相關函數
+  const toggleLinkEditor = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowLinkEditor((prev) => !prev)
+    setShowColorPicker(false)
+    setLinkValue(currentLink)
+  }, [currentLink])
+
+  const handleLinkSave = useCallback(() => {
+    setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === id
+          ? { ...node, data: { ...node.data, link: linkValue.trim() } }
+          : node,
+      ),
+    )
+    setShowLinkEditor(false)
+  }, [id, linkValue, setNodes])
+
+  const handleLinkRemove = useCallback(() => {
+    setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === id
+          ? { ...node, data: { ...node.data, link: '' } }
+          : node,
+      ),
+    )
+    setShowLinkEditor(false)
+  }, [id, setNodes])
 
   // 判斷是否為完全透明
   const isFullyTransparent =
@@ -265,6 +302,22 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
         borderColor: currentColor.border,
       }}
     >
+      {/* 節點大小調整器 - 選中時顯示 */}
+      <NodeResizer
+        color={currentColor.border}
+        isVisible={selected}
+        minWidth={120}
+        minHeight={60}
+        handleStyle={{
+          width: 8,
+          height: 8,
+          borderRadius: 2,
+        }}
+        lineStyle={{
+          borderWidth: 1,
+        }}
+      />
+
       {/* 四個方向的連接點 */}
       <Handle
         type="target"
@@ -341,6 +394,30 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
             </svg>
           </button>
 
+          {/* 連結按鈕 */}
+          <button
+            type="button"
+            className={`node-link-btn ${currentLink ? 'has-link' : ''}`}
+            onClick={toggleLinkEditor}
+            title={currentLink ? '編輯連結' : '新增連結'}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </button>
+
           {/* 刪除按鈕 */}
           <button
             type="button"
@@ -363,6 +440,30 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
+        </div>
+      )}
+
+      {/* 連結編輯器 */}
+      {showLinkEditor && (
+        <div className="node-link-editor">
+          <input
+            type="url"
+            value={linkValue}
+            onChange={(e) => setLinkValue(e.target.value)}
+            placeholder="輸入連結 URL"
+            className="link-input"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <div className="link-actions">
+            <button type="button" className="link-save-btn" onClick={handleLinkSave}>
+              確定
+            </button>
+            {currentLink && (
+              <button type="button" className="link-remove-btn" onClick={handleLinkRemove}>
+                移除
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -453,6 +554,48 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
           </span>
         )}
       </div>
+
+      {/* Info 連結圖標 - 只在有連結時顯示 */}
+      {currentLink && (
+        <div className="node-info-link">
+          <a
+            href={currentLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            title={currentLink}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 48 48"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M24 44C29.5228 44 34.5228 41.7614 38.1421 38.1421C41.7614 34.5228 44 29.5228 44 24C44 18.4772 41.7614 13.4772 38.1421 9.85786C34.5228 6.23858 29.5228 4 24 4C18.4772 4 13.4772 6.23858 9.85786 9.85786C6.23858 13.4772 4 18.4772 4 24C4 29.5228 6.23858 34.5228 9.85786 38.1421C13.4772 41.7614 18.4772 44 24 44Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="4"
+                strokeLinejoin="round"
+              />
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M24 37C25.3807 37 26.5 35.8807 26.5 34.5C26.5 33.1193 25.3807 32 24 32C22.6193 32 21.5 33.1193 21.5 34.5C21.5 35.8807 22.6193 37 24 37Z"
+                fill="currentColor"
+              />
+              <path
+                d="M24 12V28"
+                stroke="currentColor"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </a>
+        </div>
+      )}
     </div>
   )
 }
