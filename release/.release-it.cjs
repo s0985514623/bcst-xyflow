@@ -46,6 +46,10 @@ module.exports = {
     // 'after:git:release': 'echo After git push, before github release', // run after git push, before github release
     'after:release': [
       'git pull',
+      // Create GitHub Release using node script (bypass release-it bug)
+      release
+        ? 'node ./release/create-github-release.cjs'
+        : 'echo 🚫 skip GitHub release',
     ], // run after release
   },
   npm: {
