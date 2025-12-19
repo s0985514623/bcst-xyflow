@@ -21,6 +21,7 @@ import { useGetFlowData, useSaveFlowData } from '@/hooks'
 import Toolbar from './Toolbar'
 import EditableNode from './EditableNode'
 import ReadOnlyNode from './ReadOnlyNode'
+import CustomEdge from './CustomEdge'
 import type { FlowData } from '@/types/flow'
 
 // Custom node types for editable mode
@@ -35,8 +36,15 @@ const readOnlyNodeTypes = {
   default: ReadOnlyNode,
 }
 
+// Custom edge types
+const customEdgeTypes = {
+  custom: CustomEdge,
+  default: CustomEdge,
+}
+
 // Default edge style
 const defaultEdgeOptions = {
+  type: 'custom',
   markerEnd: {
     type: MarkerType.ArrowClosed,
     color: '#64748b',
@@ -175,6 +183,10 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
           {
             ...params,
             ...defaultEdgeOptions,
+            data: {
+              edgeStyle: 'solid',
+              strokeDasharray: undefined,
+            },
           },
           eds,
         ),
@@ -241,6 +253,7 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
           onEdgesChange={readOnly ? undefined : onEdgesChange}
           onConnect={readOnly ? undefined : onConnect}
           nodeTypes={nodeTypes}
+          edgeTypes={customEdgeTypes}
           defaultEdgeOptions={defaultEdgeOptions}
           fitView
           snapToGrid={!readOnly}
@@ -249,6 +262,8 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
           nodesDraggable={!readOnly}
           nodesConnectable={!readOnly}
           elementsSelectable={!readOnly}
+          edgesFocusable={!readOnly}
+          edgesReconnectable={!readOnly}
           panOnDrag={true}
           zoomOnScroll={true}
         >
