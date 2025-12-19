@@ -1,5 +1,6 @@
 import { useCallback, useState, memo, useRef } from 'react'
 import { Handle, Position, useReactFlow, NodeResizer } from '@xyflow/react'
+import React from 'react'
 
 // 預設顏色選項
 export const NODE_COLORS = [
@@ -24,10 +25,30 @@ export interface NodeColor {
   text: string
 }
 
+// 文字樣式介面
+export interface TextStyle {
+  fontSize?: number // 字體大小 (px)
+  bold?: boolean // 粗體
+  italic?: boolean // 斜體
+  underline?: boolean // 底線
+}
+
+// 預設文字樣式
+export const DEFAULT_TEXT_STYLE: TextStyle = {
+  fontSize: 13,
+  bold: false,
+  italic: false,
+  underline: false,
+}
+
+// 可選字體大小
+export const FONT_SIZES = [10, 12, 13, 14, 16, 18, 20, 24, 28, 32]
+
 export interface EditableNodeData {
   label?: string
   color?: NodeColor
   link?: string // 可選的連結 URL
+  textStyle?: TextStyle // 文字樣式
 }
 
 interface EditableNodeProps {
@@ -121,12 +142,125 @@ export function processLabel(label: string | undefined): string {
 }
 
 /**
+ * 解析富文本標記並轉換為 React 元素
+ * 支援的格式：
+ * - **粗體** 或 __粗體__
+ * - *斜體* 或 _斜體_
+ * - ~~刪除線~~
+ * - 可以組合使用，如 ***粗斜體***
+ */
+interface TextSegment {
+  text: string
+  bold?: boolean
+  italic?: boolean
+  strikethrough?: boolean
+}
+
+function parseRichText(text: string): TextSegment[] {
+  const segments: TextSegment[] = []
+
+  // 正則表達式匹配各種格式
+  // 匹配順序：粗斜體 > 粗體 > 斜體 > 刪除線 > 普通文字
+  const pattern =
+    /(\*\*\*(.+?)\*\*\*)|(\*\*(.+?)\*\*)|(__(.+?)__)|(\*(.+?)\*)|(_([^_]+)_)|(~~(.+?)~~)/g
+
+  let lastIndex = 0
+  let match
+
+  while ((match = pattern.exec(text)) !== null) {
+    // 添加匹配前的普通文字
+    if (match.index > lastIndex) {
+      segments.push({ text: text.slice(lastIndex, match.index) })
+    }
+
+    if (match[1]) {
+      // ***粗斜體***
+      segments.push({ text: match[2], bold: true, italic: true })
+    } else if (match[3]) {
+      // **粗體**
+      segments.push({ text: match[4], bold: true })
+    } else if (match[5]) {
+      // __粗體__
+      segments.push({ text: match[6], bold: true })
+    } else if (match[7]) {
+      // *斜體*
+      segments.push({ text: match[8], italic: true })
+    } else if (match[9]) {
+      // _斜體_
+      segments.push({ text: match[10], italic: true })
+    } else if (match[11]) {
+      // ~~刪除線~~
+      segments.push({ text: match[12], strikethrough: true })
+    }
+
+    lastIndex = match.index + match[0].length
+  }
+
+  // 添加剩餘的普通文字
+  if (lastIndex < text.length) {
+    segments.push({ text: text.slice(lastIndex) })
+  }
+
+  // 如果沒有任何匹配，返回原始文字
+  if (segments.length === 0) {
+    segments.push({ text })
+  }
+
+  return segments
+}
+
+/**
+ * 渲染富文本元素
+ */
+interface RichTextProps {
+  text: string
+  baseStyle?: React.CSSProperties
+}
+
+export function RichText({ text, baseStyle = {} }: RichTextProps) {
+  const processedText = processLabel(text)
+
+  // 按換行符分割處理
+  const lines = processedText.split('\n')
+
+  return (
+    <>
+      {lines.map((line, lineIndex) => {
+        const segments = parseRichText(line)
+        return (
+          <React.Fragment key={lineIndex}>
+            {lineIndex > 0 && <br />}
+            {segments.map((segment, segIndex) => {
+              const style: React.CSSProperties = {
+                ...baseStyle,
+                fontWeight: segment.bold ? 'bold' : baseStyle.fontWeight,
+                fontStyle: segment.italic ? 'italic' : baseStyle.fontStyle,
+                textDecoration: segment.strikethrough
+                  ? 'line-through'
+                  : baseStyle.textDecoration,
+              }
+
+              return (
+                <span key={`${lineIndex}-${segIndex}`} style={style}>
+                  {segment.text}
+                </span>
+              )
+            })}
+          </React.Fragment>
+        )
+      })}
+    </>
+  )
+}
+
+/**
  * Editable Node Component - 可編輯標籤的節點
  */
 function EditableNode({ id, data, selected }: EditableNodeProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showLinkEditor, setShowLinkEditor] = useState(false)
+  const [showTextStyleEditor, setShowTextStyleEditor] = useState(false)
   const [inputValue, setInputValue] = useState(processLabel(data?.label))
   const [linkValue, setLinkValue] = useState(data?.link || '')
   const colorInputRef = useRef<HTMLInputElement>(null)
@@ -140,6 +274,9 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
 
   // 當前連結
   const currentLink = data?.link || ''
+
+  // 當前文字樣式
+  const currentTextStyle: TextStyle = data?.textStyle || DEFAULT_TEXT_STYLE
 
   const handleDoubleClick = useCallback(() => {
     setIsEditing(true)
@@ -258,6 +395,7 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
     e.stopPropagation()
     setShowColorPicker((prev) => !prev)
     setShowLinkEditor(false)
+    setShowTextStyleEditor(false)
   }, [])
 
   // 連結編輯相關函數
@@ -265,8 +403,76 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
     e.stopPropagation()
     setShowLinkEditor((prev) => !prev)
     setShowColorPicker(false)
+    setShowTextStyleEditor(false)
     setLinkValue(currentLink)
   }, [currentLink])
+
+  // 文字樣式編輯相關函數
+  const toggleTextStyleEditor = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowTextStyleEditor((prev) => !prev)
+    setShowColorPicker(false)
+    setShowLinkEditor(false)
+  }, [])
+
+  // 更新文字樣式
+  const updateTextStyle = useCallback(
+    (newStyle: Partial<TextStyle>) => {
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === id
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  textStyle: {
+                    ...currentTextStyle,
+                    ...newStyle,
+                  },
+                },
+              }
+            : node,
+        ),
+      )
+    },
+    [id, setNodes, currentTextStyle],
+  )
+
+  // 切換粗體
+  const toggleBold = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      updateTextStyle({ bold: !currentTextStyle.bold })
+    },
+    [updateTextStyle, currentTextStyle.bold],
+  )
+
+  // 切換斜體
+  const toggleItalic = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      updateTextStyle({ italic: !currentTextStyle.italic })
+    },
+    [updateTextStyle, currentTextStyle.italic],
+  )
+
+  // 切換底線
+  const toggleUnderline = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      updateTextStyle({ underline: !currentTextStyle.underline })
+    },
+    [updateTextStyle, currentTextStyle.underline],
+  )
+
+  // 變更字體大小
+  const handleFontSizeChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      e.stopPropagation()
+      updateTextStyle({ fontSize: parseInt(e.target.value, 10) })
+    },
+    [updateTextStyle],
+  )
 
   const handleLinkSave = useCallback(() => {
     setNodes((nodes) =>
@@ -394,6 +600,30 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
             </svg>
           </button>
 
+          {/* 文字樣式按鈕 */}
+          <button
+            type="button"
+            className={`node-text-style-btn ${showTextStyleEditor ? 'active' : ''}`}
+            onClick={toggleTextStyleEditor}
+            title="文字樣式"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="4 7 4 4 20 4 20 7"></polyline>
+              <line x1="9" y1="20" x2="15" y2="20"></line>
+              <line x1="12" y1="4" x2="12" y2="20"></line>
+            </svg>
+          </button>
+
           {/* 連結按鈕 */}
           <button
             type="button"
@@ -440,6 +670,55 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
+        </div>
+      )}
+
+      {/* 文字樣式編輯器 */}
+      {showTextStyleEditor && (
+        <div className="node-text-style-editor">
+          {/* 字體大小 */}
+          <div className="text-style-row">
+            <label className="text-style-label">大小</label>
+            <select
+              className="font-size-select"
+              value={currentTextStyle.fontSize || DEFAULT_TEXT_STYLE.fontSize}
+              onChange={handleFontSizeChange}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {FONT_SIZES.map((size) => (
+                <option key={size} value={size}>
+                  {size}px
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* 樣式按鈕 */}
+          <div className="text-style-buttons">
+            <button
+              type="button"
+              className={`style-btn bold-btn ${currentTextStyle.bold ? 'active' : ''}`}
+              onClick={toggleBold}
+              title="粗體"
+            >
+              B
+            </button>
+            <button
+              type="button"
+              className={`style-btn italic-btn ${currentTextStyle.italic ? 'active' : ''}`}
+              onClick={toggleItalic}
+              title="斜體"
+            >
+              I
+            </button>
+            <button
+              type="button"
+              className={`style-btn underline-btn ${currentTextStyle.underline ? 'active' : ''}`}
+              onClick={toggleUnderline}
+              title="底線"
+            >
+              U
+            </button>
+          </div>
         </div>
       )}
 
@@ -543,14 +822,25 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
             className="node-input node-textarea"
             autoFocus
             rows={3}
-            placeholder="輸入文字，按 Enter 換行"
+            placeholder="使用 *斜體* **粗體** ~~刪除線~~"
+            style={{
+              fontSize: currentTextStyle.fontSize || DEFAULT_TEXT_STYLE.fontSize,
+            }}
           />
         ) : (
           <span
             className="node-label"
-            style={{ color: currentColor.text, whiteSpace: 'pre-wrap' }}
+            style={{
+              color: currentColor.text,
+              fontSize: currentTextStyle.fontSize || DEFAULT_TEXT_STYLE.fontSize,
+            }}
           >
-            {processLabel(data?.label)}
+            <RichText
+              text={data?.label || '未命名'}
+              baseStyle={{
+                color: currentColor.text,
+              }}
+            />
           </span>
         )}
       </div>

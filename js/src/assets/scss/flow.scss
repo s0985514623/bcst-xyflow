@@ -259,7 +259,8 @@
 
   .node-color-btn,
   .node-link-btn,
-  .node-delete-btn {
+  .node-delete-btn,
+  .node-text-style-btn {
     width: 20px;
     height: 20px;
     padding: 0;
@@ -291,6 +292,19 @@
     }
   }
 
+  .node-text-style-btn {
+    background: #8b5cf6;
+
+    &:hover {
+      background: #7c3aed;
+    }
+
+    &.active {
+      background: #7c3aed;
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4);
+    }
+  }
+
   .node-link-btn {
     background: #6b7280;
 
@@ -312,6 +326,112 @@
 
     &:hover {
       background: #dc2626;
+    }
+  }
+
+  // 文字樣式編輯器
+  .node-text-style-editor {
+    position: absolute;
+    top: -90px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 20;
+    min-width: 140px;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid white;
+    }
+
+    .text-style-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .text-style-label {
+      font-size: 11px;
+      color: #64748b;
+      white-space: nowrap;
+      min-width: 28px;
+    }
+
+    .font-size-select {
+      flex: 1;
+      padding: 4px 6px;
+      font-size: 11px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      outline: none;
+
+      &:focus {
+        border-color: #8b5cf6;
+        box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+      }
+    }
+
+    .text-style-buttons {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .style-btn {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      background: white;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+      }
+
+      &.active {
+        background: #8b5cf6;
+        border-color: #8b5cf6;
+        color: white;
+      }
+
+      &.bold-btn {
+        font-weight: 700;
+      }
+
+      &.italic-btn {
+        font-style: italic;
+        font-family: Georgia, serif;
+      }
+
+      &.underline-btn {
+        text-decoration: underline;
+      }
     }
   }
 
