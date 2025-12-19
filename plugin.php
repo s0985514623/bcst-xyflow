@@ -3,7 +3,7 @@
  * Plugin Name:       BCST XYFlow
  * Plugin URI:        https://github.com/s0985514623/bcst-xyflow
  * Description:       BCST XYFlow is a plugin for creating a WordPress plugin with React, Tailwind, TypeScript, React Query v4, SCSS and Vite.
- * Version:           1.0.11
+ * Version:           1.0.12
  * Requires at least: 5.7
  * Requires PHP:      8.0
  * Author:            Ren
