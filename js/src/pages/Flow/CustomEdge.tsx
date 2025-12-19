@@ -20,6 +20,7 @@ export type EdgeStyleType = (typeof edgeStyleOptions)[number]['id']
 export interface CustomEdgeData {
   strokeDasharray?: string
   edgeStyle?: EdgeStyleType
+  isLine?: boolean // 標記是否為獨立線條（無箭頭）
   [key: string]: unknown
 }
 
@@ -56,6 +57,8 @@ export default function CustomEdge({
 
   // 從 data 獲取樣式
   const strokeDasharray = data?.strokeDasharray
+  // 判斷是否為獨立線條（獨立線條不顯示箭頭）
+  const isLine = data?.isLine === true
 
   // 處理樣式變更
   const handleStyleChange = useCallback(
@@ -95,7 +98,7 @@ export default function CustomEdge({
       {/* 主要邊路徑 */}
       <BaseEdge
         path={edgePath}
-        markerEnd={markerEnd}
+        markerEnd={isLine ? undefined : markerEnd}
         style={{
           ...style,
           strokeDasharray,

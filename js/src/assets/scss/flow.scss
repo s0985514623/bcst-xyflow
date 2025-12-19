@@ -97,6 +97,16 @@
       border-color: #ef4444;
     }
   }
+
+  &.toolbar-btn-secondary {
+    background: #64748b;
+    color: white;
+    border-color: #475569;
+
+    &:hover:not(:disabled) {
+      background: #475569;
+    }
+  }
 }
 
 // Canvas area
@@ -1050,6 +1060,73 @@
 .react-flow__edge.selected {
   .react-flow__edge-path {
     stroke: #3b82f6 !important;
+  }
+}
+
+// Line Endpoint styles - 線條端點
+.line-endpoint {
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: move;
+
+  .endpoint-dot {
+    width: 12px;
+    height: 12px;
+    background: #64748b;
+    border: 2px solid white;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+  }
+
+  &:hover .endpoint-dot {
+    transform: scale(1.2);
+    background: #3b82f6;
+  }
+
+  &.selected .endpoint-dot {
+    background: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+
+  // 連接點樣式 - 隱藏但可連接
+  .endpoint-handle {
+    width: 1px !important;
+    height: 1px !important;
+    min-width: 1px !important;
+    min-height: 1px !important;
+    opacity: 0 !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  // 唯讀模式 - 完全隱藏端點
+  &.readonly {
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+
+    .endpoint-dot {
+      display: none;
+    }
+
+    .endpoint-handle.hidden {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+  }
+}
+
+// 在唯讀模式下隱藏 lineEndpoint 類型的節點
+.xyflow-container.readonly {
+  .react-flow__node-lineEndpoint {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 1px !important;
+    height: 1px !important;
   }
 }
 

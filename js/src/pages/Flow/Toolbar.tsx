@@ -1,5 +1,6 @@
 interface ToolbarProps {
   onAddNode: () => void
+  onAddLine: () => void
   onSave: () => void
   onClear: () => void
   isSaving: boolean
@@ -10,6 +11,7 @@ interface ToolbarProps {
 
 export default function Toolbar({
   onAddNode,
+  onAddLine,
   onSave,
   onClear,
   isSaving,
@@ -41,6 +43,28 @@ export default function Toolbar({
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
           新增節點
+        </button>
+
+        <button
+          type="button"
+          className="toolbar-btn toolbar-btn-secondary"
+          onClick={onAddLine}
+          disabled={isLoading}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          新增線條
         </button>
 
         <button

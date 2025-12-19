@@ -22,18 +22,21 @@ import Toolbar from './Toolbar'
 import EditableNode from './EditableNode'
 import ReadOnlyNode from './ReadOnlyNode'
 import CustomEdge from './CustomEdge'
+import LineEndpoint, { ReadOnlyLineEndpoint } from './LineEndpoint'
 import type { FlowData } from '@/types/flow'
 
 // Custom node types for editable mode
 const editableNodeTypes = {
   editable: EditableNode,
   default: EditableNode,
+  lineEndpoint: LineEndpoint,
 }
 
 // Custom node types for readonly mode
 const readOnlyNodeTypes = {
   editable: ReadOnlyNode,
   default: ReadOnlyNode,
+  lineEndpoint: ReadOnlyLineEndpoint,
 }
 
 // Custom edge types
@@ -124,6 +127,63 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
       data: { label: '新節點' },
     }
     setNodes((prev) => [...prev, newNode])
+  }, [readOnly])
+
+  // Add new line (two endpoints + edge) (edit mode only)
+  const addNewLine = useCallback(() => {
+    if (readOnly) return
+
+    const timestamp = Date.now()
+    const startId = `line_start_${timestamp}`
+    const endId = `line_end_${timestamp}`
+    const edgeId = `line_edge_${timestamp}`
+
+    // 隨機位置
+    const baseX = Math.random() * 200 + 100
+    const baseY = Math.random() * 200 + 100
+
+    // 創建起點節點
+    const startNode: Node = {
+      id: startId,
+      type: 'lineEndpoint',
+      position: { x: baseX, y: baseY },
+      data: {
+        isStart: true,
+        pairedEndpointId: endId,
+        edgeId: edgeId,
+      },
+    }
+
+    // 創建終點節點（水平偏移 150px）
+    const endNode: Node = {
+      id: endId,
+      type: 'lineEndpoint',
+      position: { x: baseX + 150, y: baseY },
+      data: {
+        isStart: false,
+        pairedEndpointId: startId,
+        edgeId: edgeId,
+      },
+    }
+
+    // 創建連接兩個端點的邊（獨立線條不需要箭頭）
+    const lineEdge: Edge = {
+      ...defaultEdgeOptions,
+      id: edgeId,
+      source: startId,
+      target: endId,
+      sourceHandle: 'source',
+      targetHandle: 'target',
+      markerEnd: undefined, // 獨立線條不顯示箭頭
+      data: {
+        edgeStyle: 'solid',
+        strokeDasharray: undefined,
+        isLine: true, // 標記這是獨立線條
+      },
+    }
+
+    setNodes((prev) => [...prev, startNode, endNode])
+    setEdges((prev) => [...prev, lineEdge])
   }, [readOnly])
 
   // Clear all nodes and edges (edit mode only)
@@ -236,6 +296,7 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
       {!readOnly && (
         <Toolbar
           onAddNode={addNewNode}
+          onAddLine={addNewLine}
           onSave={handleSave}
           onClear={clearCanvas}
           isSaving={isSaving}
