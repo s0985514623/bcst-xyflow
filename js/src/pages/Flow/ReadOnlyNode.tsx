@@ -144,7 +144,12 @@ function ReadOnlyNode({ data }: ReadOnlyNodeProps) {
         style={hiddenHandleStyle}
       />
 
-      <div className="node-content">
+      <div
+        className="node-content"
+        style={{
+          textAlign: currentTextStyle.textAlign || DEFAULT_TEXT_STYLE.textAlign,
+        }}
+      >
         <span
           className="node-label"
           style={{

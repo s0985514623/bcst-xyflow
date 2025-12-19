@@ -25,12 +25,16 @@ export interface NodeColor {
   text: string
 }
 
+// 文字對齊類型
+export type TextAlign = 'left' | 'center' | 'right'
+
 // 文字樣式介面
 export interface TextStyle {
   fontSize?: number // 字體大小 (px)
   bold?: boolean // 粗體
   italic?: boolean // 斜體
   underline?: boolean // 底線
+  textAlign?: TextAlign // 對齊方式
 }
 
 // 預設文字樣式
@@ -39,6 +43,7 @@ export const DEFAULT_TEXT_STYLE: TextStyle = {
   bold: false,
   italic: false,
   underline: false,
+  textAlign: 'center',
 }
 
 // 可選字體大小
@@ -493,6 +498,15 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
     [updateTextStyle],
   )
 
+  // 設定對齊方式
+  const setTextAlign = useCallback(
+    (align: TextAlign) => (e: React.MouseEvent) => {
+      e.stopPropagation()
+      updateTextStyle({ textAlign: align })
+    },
+    [updateTextStyle],
+  )
+
   const handleLinkSave = useCallback(() => {
     setNodes((nodes) =>
       nodes.map((node) =>
@@ -785,6 +799,45 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
               U
             </button>
           </div>
+          {/* 對齊按鈕 */}
+          <div className="text-style-buttons align-buttons">
+            <button
+              type="button"
+              className={`style-btn align-btn ${(currentTextStyle.textAlign || 'center') === 'left' ? 'active' : ''}`}
+              onClick={setTextAlign('left')}
+              title="靠左對齊"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="15" y2="12"></line>
+                <line x1="3" y1="18" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <button
+              type="button"
+              className={`style-btn align-btn ${(currentTextStyle.textAlign || 'center') === 'center' ? 'active' : ''}`}
+              onClick={setTextAlign('center')}
+              title="置中對齊"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="6" y1="12" x2="18" y2="12"></line>
+                <line x1="4" y1="18" x2="20" y2="18"></line>
+              </svg>
+            </button>
+            <button
+              type="button"
+              className={`style-btn align-btn ${(currentTextStyle.textAlign || 'center') === 'right' ? 'active' : ''}`}
+              onClick={setTextAlign('right')}
+              title="靠右對齊"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="9" y1="12" x2="21" y2="12"></line>
+                <line x1="6" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          </div>
         </div>
       )}
 
@@ -904,7 +957,13 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
         </div>
       )}
 
-      <div className="node-content" onDoubleClick={handleDoubleClick}>
+      <div
+        className="node-content"
+        onDoubleClick={handleDoubleClick}
+        style={{
+          textAlign: currentTextStyle.textAlign || DEFAULT_TEXT_STYLE.textAlign,
+        }}
+      >
         {isEditing ? (
           <textarea
             value={inputValue}
@@ -917,6 +976,7 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
             placeholder="使用 *斜體* **粗體** ~~刪除線~~"
             style={{
               fontSize: currentTextStyle.fontSize || DEFAULT_TEXT_STYLE.fontSize,
+              textAlign: currentTextStyle.textAlign || DEFAULT_TEXT_STYLE.textAlign,
             }}
           />
         ) : (
