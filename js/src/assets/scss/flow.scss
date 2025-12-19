@@ -192,6 +192,12 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  overflow: visible; // 讓外部連結能顯示在節點外面
+
+  // 有外部連結時增加底部間距
+  &.has-info-link {
+    margin-bottom: 36px;
+  }
 
   &:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
@@ -269,6 +275,7 @@
 
   .node-color-btn,
   .node-link-btn,
+  .node-info-link-btn,
   .node-delete-btn,
   .node-text-style-btn {
     width: 20px;
@@ -316,6 +323,22 @@
   }
 
   .node-link-btn {
+    background: #6b7280;
+
+    &:hover {
+      background: #4b5563;
+    }
+
+    &.has-link {
+      background: #3b82f6;
+
+      &:hover {
+        background: #2563eb;
+      }
+    }
+  }
+
+  .node-info-link-btn {
     background: #6b7280;
 
     &:hover {
@@ -448,7 +471,7 @@
   // 連結編輯器
   .node-link-editor {
     position: absolute;
-    top: -90px;
+    top: -110px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -472,6 +495,20 @@
       border-left: 6px solid transparent;
       border-right: 6px solid transparent;
       border-top: 6px solid white;
+    }
+
+    .link-editor-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      text-align: center;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 2px;
+    }
+
+    &.info-link-editor .link-editor-title {
+      color: #10b981;
     }
 
     .link-input {
@@ -518,38 +555,6 @@
         &:hover {
           background: #dc2626;
         }
-      }
-    }
-  }
-
-  // Info 連結圖標（節點下方）- 與節點同寬
-  .node-info-link {
-    margin-top: auto; // 使用 auto 推到底部
-    padding-top: 8px;
-    width: 100%;
-    flex-shrink: 0;
-
-    a {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 28px;
-      background: #f0fdf4;
-      border: 2px solid #10b981;
-      border-radius: 4px;
-      color: #10b981;
-      transition: all 0.2s ease;
-      text-decoration: none;
-
-      &:hover {
-        background: #10b981;
-        color: white;
-      }
-
-      svg {
-        width: 14px;
-        height: 14px;
       }
     }
   }
@@ -752,6 +757,45 @@
   }
 }
 
+// 外部連結圖標 - 顯示在節點外部（下方）
+.node-external-info-link {
+  position: absolute;
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: auto !important;
+
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: #f0fdf4;
+    border: 2px solid #10b981;
+    border-radius: 50%;
+    color: #10b981;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    pointer-events: auto !important;
+
+    &:hover {
+      background: #10b981;
+      color: white;
+      transform: scale(1.1);
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+      pointer-events: none;
+    }
+  }
+}
+
 // Read-only Node styles
 .readonly-node {
   position: relative;
@@ -769,6 +813,13 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  transition: all 0.2s ease;
+  overflow: visible; // 讓外部連結能顯示在節點外面
+
+  // 有外部連結時增加底部間距
+  &.has-info-link {
+    margin-bottom: 36px;
+  }
 
   .node-content {
     cursor: default;
@@ -781,40 +832,13 @@
     word-break: break-word;
   }
 
-  // Info 連結圖標（節點下方）- 確保可點擊，與節點同寬
-  .node-info-link {
-    margin-top: auto; // 使用 auto 推到底部
-    padding-top: 8px;
-    position: relative;
-    z-index: 100; // 確保在最上層
-    width: 100%;
-    flex-shrink: 0;
+  // 有站內連結時的樣式
+  &.has-link {
+    cursor: pointer;
 
-    a {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 28px;
-      background: #f0fdf4;
-      border: 2px solid #10b981;
-      border-radius: 4px;
-      color: #10b981;
-      transition: all 0.2s ease;
-      cursor: pointer;
-      pointer-events: auto !important; // 確保可以點擊
-      text-decoration: none;
-
-      &:hover {
-        background: #10b981;
-        color: white;
-      }
-
-      svg {
-        width: 14px;
-        height: 14px;
-        pointer-events: none; // SVG 不攔截點擊
-      }
+    &:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
     }
   }
 
@@ -823,6 +847,11 @@
     border: none !important;
     box-shadow: none !important;
     background: transparent !important;
+
+    &.has-link:hover {
+      outline: 2px dashed #3b82f6;
+      outline-offset: 2px;
+    }
   }
 
   // Handle styles (hidden in readonly mode - 隱藏連接點但保留線路連接)
@@ -845,6 +874,21 @@
 
   .react-flow__node {
     cursor: default;
+
+    // 有站內連結的節點可點擊
+    &:has(.readonly-node.has-link) {
+      cursor: pointer;
+    }
+  }
+
+  // 確保有連結的節點可以接收點擊事件
+  .readonly-node.has-link {
+    pointer-events: auto !important;
+
+    .node-content {
+      pointer-events: auto !important;
+      cursor: pointer;
+    }
   }
 }
 

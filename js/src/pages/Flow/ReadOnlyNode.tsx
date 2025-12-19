@@ -21,8 +21,11 @@ function ReadOnlyNode({ data }: ReadOnlyNodeProps) {
   // Get current color or default
   const currentColor: NodeColor = data?.color || DEFAULT_NODE_COLOR
 
-  // 當前連結
+  // 站內連結
   const currentLink = data?.link || ''
+
+  // 外部連結
+  const currentInfoLink = data?.infoLink || ''
 
   // 當前文字樣式
   const currentTextStyle: TextStyle = data?.textStyle || DEFAULT_TEXT_STYLE
@@ -31,11 +34,33 @@ function ReadOnlyNode({ data }: ReadOnlyNodeProps) {
   const isFullyTransparent =
     currentColor.bg === 'transparent' && currentColor.border === 'transparent'
 
-  // 處理連結點擊 - 阻止事件冒泡讓 ReactFlow 不會攔截
-  const handleLinkClick = useCallback(
+  // 處理站內連結點擊 - 跳轉到站內連結（不開新分頁）
+  const handleNodeClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (currentLink) {
+        e.stopPropagation()
+        e.preventDefault()
+        window.location.href = currentLink
+      }
+    },
+    [currentLink],
+  )
+
+  // 使用 onMouseDown 來避免 ReactFlow 攔截點擊事件
+  const handleNodeMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (currentLink && e.button === 0) { // 只處理左鍵點擊
+        e.stopPropagation()
+      }
+    },
+    [currentLink],
+  )
+
+  // 處理外部連結點擊 - 阻止事件冒泡讓 ReactFlow 不會攔截
+  const handleInfoLinkClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.stopPropagation()
-      // 讓瀏覽器正常處理連結跳轉
+      // 讓瀏覽器正常處理連結跳轉（target="_blank"）
     },
     [],
   )
@@ -52,11 +77,14 @@ function ReadOnlyNode({ data }: ReadOnlyNodeProps) {
 
   return (
     <div
-      className={`readonly-node ${isFullyTransparent ? 'transparent-node' : ''}`}
+      className={`readonly-node ${isFullyTransparent ? 'transparent-node' : ''} ${currentLink ? 'has-link' : ''} ${currentInfoLink ? 'has-info-link' : ''}`}
       style={{
         backgroundColor: currentColor.bg,
         borderColor: currentColor.border,
+        cursor: currentLink ? 'pointer' : 'default',
       }}
+      onClick={handleNodeClick}
+      onMouseDown={handleNodeMouseDown}
     >
       {/* 四個方向的連接點（隱藏但保留用於線路連接） */}
       <Handle
@@ -133,15 +161,15 @@ function ReadOnlyNode({ data }: ReadOnlyNodeProps) {
         </span>
       </div>
 
-      {/* Info 連結圖標 - 只在有連結時顯示 */}
-      {currentLink && (
-        <div className="node-info-link">
+      {/* 外部連結圖標 - 顯示在節點外部（下方），使用 target="_blank" */}
+      {currentInfoLink && (
+        <div className="node-external-info-link">
           <a
-            href={currentLink}
+            href={currentInfoLink}
             target="_blank"
             rel="noopener noreferrer"
-            title={currentLink}
-            onClick={handleLinkClick}
+            title={currentInfoLink}
+            onClick={handleInfoLinkClick}
             onMouseDown={(e) => e.stopPropagation()}
           >
             <svg

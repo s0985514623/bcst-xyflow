@@ -47,7 +47,8 @@ export const FONT_SIZES = [10, 12, 13, 14, 16, 18, 20, 24, 28, 32]
 export interface EditableNodeData {
   label?: string
   color?: NodeColor
-  link?: string // 可選的連結 URL
+  link?: string // 站內連結 URL（點擊節點跳轉，不開新分頁）
+  infoLink?: string // 外部連結 URL（info 按鈕，開新分頁）
   textStyle?: TextStyle // 文字樣式
 }
 
@@ -260,9 +261,11 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showLinkEditor, setShowLinkEditor] = useState(false)
+  const [showInfoLinkEditor, setShowInfoLinkEditor] = useState(false)
   const [showTextStyleEditor, setShowTextStyleEditor] = useState(false)
   const [inputValue, setInputValue] = useState(processLabel(data?.label))
   const [linkValue, setLinkValue] = useState(data?.link || '')
+  const [infoLinkValue, setInfoLinkValue] = useState(data?.infoLink || '')
   const colorInputRef = useRef<HTMLInputElement>(null)
   const { setNodes, deleteElements } = useReactFlow()
 
@@ -274,6 +277,9 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
 
   // 當前連結
   const currentLink = data?.link || ''
+
+  // 當前外部連結
+  const currentInfoLink = data?.infoLink || ''
 
   // 當前文字樣式
   const currentTextStyle: TextStyle = data?.textStyle || DEFAULT_TEXT_STYLE
@@ -395,17 +401,29 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
     e.stopPropagation()
     setShowColorPicker((prev) => !prev)
     setShowLinkEditor(false)
+    setShowInfoLinkEditor(false)
     setShowTextStyleEditor(false)
   }, [])
 
-  // 連結編輯相關函數
+  // 站內連結編輯相關函數
   const toggleLinkEditor = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     setShowLinkEditor((prev) => !prev)
     setShowColorPicker(false)
     setShowTextStyleEditor(false)
+    setShowInfoLinkEditor(false)
     setLinkValue(currentLink)
   }, [currentLink])
+
+  // 外部連結（info-link）編輯相關函數
+  const toggleInfoLinkEditor = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowInfoLinkEditor((prev) => !prev)
+    setShowColorPicker(false)
+    setShowTextStyleEditor(false)
+    setShowLinkEditor(false)
+    setInfoLinkValue(currentInfoLink)
+  }, [currentInfoLink])
 
   // 文字樣式編輯相關函數
   const toggleTextStyleEditor = useCallback((e: React.MouseEvent) => {
@@ -413,6 +431,7 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
     setShowTextStyleEditor((prev) => !prev)
     setShowColorPicker(false)
     setShowLinkEditor(false)
+    setShowInfoLinkEditor(false)
   }, [])
 
   // 更新文字樣式
@@ -496,13 +515,37 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
     setShowLinkEditor(false)
   }, [id, setNodes])
 
+  // 外部連結保存
+  const handleInfoLinkSave = useCallback(() => {
+    setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === id
+          ? { ...node, data: { ...node.data, infoLink: infoLinkValue.trim() } }
+          : node,
+      ),
+    )
+    setShowInfoLinkEditor(false)
+  }, [id, infoLinkValue, setNodes])
+
+  // 外部連結移除
+  const handleInfoLinkRemove = useCallback(() => {
+    setNodes((nodes) =>
+      nodes.map((node) =>
+        node.id === id
+          ? { ...node, data: { ...node.data, infoLink: '' } }
+          : node,
+      ),
+    )
+    setShowInfoLinkEditor(false)
+  }, [id, setNodes])
+
   // 判斷是否為完全透明
   const isFullyTransparent =
     currentColor.bg === 'transparent' && currentColor.border === 'transparent'
 
   return (
     <div
-      className={`editable-node ${selected ? 'selected' : ''} ${isFullyTransparent ? 'transparent-node' : ''}`}
+      className={`editable-node ${selected ? 'selected' : ''} ${isFullyTransparent ? 'transparent-node' : ''} ${currentInfoLink ? 'has-info-link' : ''}`}
       style={{
         backgroundColor: currentColor.bg,
         borderColor: currentColor.border,
@@ -624,12 +667,35 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
             </svg>
           </button>
 
-          {/* 連結按鈕 */}
+          {/* 站內連結按鈕 */}
           <button
             type="button"
             className={`node-link-btn ${currentLink ? 'has-link' : ''}`}
             onClick={toggleLinkEditor}
-            title={currentLink ? '編輯連結' : '新增連結'}
+            title={currentLink ? '編輯站內連結' : '新增站內連結'}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </button>
+
+          {/* 外部連結（info）按鈕 */}
+          <button
+            type="button"
+            className={`node-info-link-btn ${currentInfoLink ? 'has-link' : ''}`}
+            onClick={toggleInfoLinkEditor}
+            title={currentInfoLink ? '編輯外部連結' : '新增外部連結'}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -722,14 +788,15 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
         </div>
       )}
 
-      {/* 連結編輯器 */}
+      {/* 站內連結編輯器 */}
       {showLinkEditor && (
         <div className="node-link-editor">
+          <div className="link-editor-title">站內連結</div>
           <input
             type="url"
             value={linkValue}
             onChange={(e) => setLinkValue(e.target.value)}
-            placeholder="輸入連結 URL"
+            placeholder="輸入站內連結 URL"
             className="link-input"
             onClick={(e) => e.stopPropagation()}
           />
@@ -739,6 +806,31 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
             </button>
             {currentLink && (
               <button type="button" className="link-remove-btn" onClick={handleLinkRemove}>
+                移除
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 外部連結編輯器 */}
+      {showInfoLinkEditor && (
+        <div className="node-link-editor info-link-editor">
+          <div className="link-editor-title">外部連結 (另開分頁)</div>
+          <input
+            type="url"
+            value={infoLinkValue}
+            onChange={(e) => setInfoLinkValue(e.target.value)}
+            placeholder="輸入外部連結 URL"
+            className="link-input"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <div className="link-actions">
+            <button type="button" className="link-save-btn" onClick={handleInfoLinkSave}>
+              確定
+            </button>
+            {currentInfoLink && (
+              <button type="button" className="link-remove-btn" onClick={handleInfoLinkRemove}>
                 移除
               </button>
             )}
@@ -845,15 +937,16 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
         )}
       </div>
 
-      {/* Info 連結圖標 - 只在有連結時顯示 */}
-      {currentLink && (
-        <div className="node-info-link">
+      {/* 外部連結圖標 - 顯示在節點外部（下方） */}
+      {currentInfoLink && (
+        <div className="node-external-info-link">
           <a
-            href={currentLink}
+            href={currentInfoLink}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            title={currentLink}
+            onMouseDown={(e) => e.stopPropagation()}
+            title={currentInfoLink}
           >
             <svg
               width="18"
