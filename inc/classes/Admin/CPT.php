@@ -136,7 +136,7 @@ final class CPT {
 			'menu_position'         => 6,
 			'menu_icon'             => 'dashicons-networking',
 			'capability_type'       => 'post',
-			'supports'              => [ 'title', 'editor', 'thumbnail', 'custom-fields', 'author' ],
+			'supports'              => [ 'title', 'editor', 'thumbnail', 'custom-fields', 'author', 'excerpt' ],
 			'taxonomies'            => [],
 			'rest_controller_class' => 'WP_REST_Posts_Controller',
 			'rewrite'               => [

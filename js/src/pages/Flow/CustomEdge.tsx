@@ -1,6 +1,7 @@
 import {
   BaseEdge,
   EdgeLabelRenderer,
+  getStraightPath,
   getSmoothStepPath,
   type EdgeProps,
   useReactFlow,
@@ -44,16 +45,29 @@ export default function CustomEdge({
   const { setEdges } = useReactFlow()
   const [showStylePicker, setShowStylePicker] = useState(false)
 
-  // 計算路徑
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-    borderRadius: 8,
-  })
+  // 計算路徑 - 根據位置關係選擇路徑類型
+  // 檢測是否為垂直或水平直線（允許 5px 的誤差）
+  const isVertical = Math.abs(sourceX - targetX) < 5
+  const isHorizontal = Math.abs(sourceY - targetY) < 5
+  
+  // 如果是垂直或水平直線，使用直線路徑避免抖動
+  // 否則使用平滑階梯路徑保持轉彎效果
+  const [edgePath, labelX, labelY] = (isVertical || isHorizontal)
+    ? getStraightPath({
+        sourceX,
+        sourceY,
+        targetX,
+        targetY,
+      })
+    : getSmoothStepPath({
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetX,
+        targetY,
+        targetPosition,
+        borderRadius: 8,
+      })
 
   // 從 data 獲取樣式
   const strokeDasharray = data?.strokeDasharray

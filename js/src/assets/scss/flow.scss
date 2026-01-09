@@ -747,24 +747,44 @@
     border: 2px solid white;
     transition: all 0.2s ease;
 
-    &:hover {
-      transform: scale(1.2);
-    }
-
     &.react-flow__handle-top {
       top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+
+      &:hover {
+        transform: translateX(-50%) scale(1.2);
+      }
     }
 
     &.react-flow__handle-bottom {
       bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+
+      &:hover {
+        transform: translateX(-50%) scale(1.2);
+      }
     }
 
     &.react-flow__handle-left {
       left: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+
+      &:hover {
+        transform: translateY(-50%) scale(1.2);
+      }
     }
 
     &.react-flow__handle-right {
       right: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+
+      &:hover {
+        transform: translateY(-50%) scale(1.2);
+      }
     }
   }
 }
