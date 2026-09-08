@@ -103,8 +103,11 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
       // 在編輯模式下，恢復保存的 viewport
       if (readOnly) {
         // 延遲執行 fitView 確保 React Flow 已準備好
+        // 不加 duration：帶動畫時 d3 transition 由 requestAnimationFrame 驅動，
+        // 頁面在背景分頁載入（例如「在新分頁開啟」）時 rAF 被節流，
+        // transition 的 end 事件不會觸發，畫面就停在未縮放的狀態。
         setTimeout(() => {
-          fitView({ padding: 0.2, duration: 300 })
+          fitView({ padding: 0.2 })
         }, 150)
       } else if (viewport) {
         setTimeout(() => {
@@ -216,23 +219,21 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
     })
   }, [readOnly, nodes, edges, getViewport, saveFlow])
 
-  // Handle node changes (edit mode only)
-  const onNodesChange = useCallback(
-    (changes: NodeChange[]) => {
-      if (readOnly) return
-      setNodes((nds) => applyNodeChanges(changes, nds))
-    },
-    [readOnly],
-  )
+  // Handle node changes
+  // 唯讀模式也必須套用變更，否則 fitView 會失效：
+  // React Flow 的 fitView() 只是把 fitViewQueued 設為 true 並排入 node queue，
+  // 真正執行要等 queue handler 呼叫 setNodes；handler 在有變更時走的是
+  // onNodesChange，若這裡直接 return，佇列中的 fitView 就永遠不會被觸發。
+  // 唯讀的限制由 nodesDraggable / elementsSelectable 等旗標把關，
+  // 此時 React Flow 只會產生 dimensions 類變更，套用它才是正確行為。
+  const onNodesChange = useCallback((changes: NodeChange[]) => {
+    setNodes((nds) => applyNodeChanges(changes, nds))
+  }, [])
 
-  // Handle edge changes (edit mode only)
-  const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => {
-      if (readOnly) return
-      setEdges((eds) => applyEdgeChanges(changes, eds))
-    },
-    [readOnly],
-  )
+  // Handle edge changes（同上，唯讀模式也要套用）
+  const onEdgesChange = useCallback((changes: EdgeChange[]) => {
+    setEdges((eds) => applyEdgeChanges(changes, eds))
+  }, [])
 
   // Handle new connections (edit mode only)
   const onConnect = useCallback(
@@ -310,8 +311,8 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={readOnly ? undefined : onNodesChange}
-          onEdgesChange={readOnly ? undefined : onEdgesChange}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
           onConnect={readOnly ? undefined : onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={customEdgeTypes}
