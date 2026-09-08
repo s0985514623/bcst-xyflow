@@ -112,10 +112,16 @@ export interface EditableNodeData {
   textStyle?: TextStyle // 文字樣式
 }
 
+// 圖層（node.zIndex）可調整的範圍，避免反覆點擊後數值無限膨脹
+export const LAYER_MIN = -50
+export const LAYER_MAX = 50
+
 interface EditableNodeProps {
   id: string
   data: EditableNodeData
   selected?: boolean
+  // React Flow 會把節點的 draggable 傳進來；false 代表已鎖定
+  draggable?: boolean
 }
 
 /**
@@ -323,7 +329,7 @@ export function RichText({ text, baseStyle = {} }: RichTextProps) {
 /**
  * Editable Node Component - 可編輯標籤的節點
  */
-function EditableNode({ id, data, selected }: EditableNodeProps) {
+function EditableNode({ id, data, selected, draggable }: EditableNodeProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showLinkEditor, setShowLinkEditor] = useState(false)
@@ -581,6 +587,71 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
     [updateTextStyle],
   )
 
+  // 調整圖層
+  // zIndex 必須是負值才會落到連線圖層下方：React Flow 的 .react-flow__edges 與
+  // .react-flow__nodes 都是 z-index auto、靠 DOM 順序堆疊，nodes 在後面，
+  // 所以只調整節點之間的先後永遠壓不到連線底下。
+  const changeLayer = useCallback(
+    (mode: 'back' | 'down' | 'up' | 'front') => (e: React.MouseEvent) => {
+      e.stopPropagation()
+      setNodes((nodes) => {
+        const zList = nodes.map((node) =>
+          typeof node.zIndex === 'number' ? node.zIndex : 0,
+        )
+        const minZ = Math.min(...zList)
+        const maxZ = Math.max(...zList)
+
+        return nodes.map((node) => {
+          if (node.id !== id) return node
+
+          const current = typeof node.zIndex === 'number' ? node.zIndex : 0
+          let next = current
+
+          if ('back' === mode) {
+            // 至少 -1，否則只是排在其他節點後面、仍然蓋在連線上
+            next = Math.min(minZ - 1, -1)
+          } else if ('front' === mode) {
+            next = Math.max(maxZ + 1, 1)
+          } else if ('up' === mode) {
+            next = current + 1
+          } else {
+            next = current - 1
+          }
+
+          return {
+            ...node,
+            zIndex: Math.max(LAYER_MIN, Math.min(LAYER_MAX, next)),
+          }
+        })
+      })
+    },
+    [id, setNodes],
+  )
+
+  // 是否已鎖定
+  const isLocked = false === draggable
+
+  // 切換鎖定
+  const toggleLock = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === id
+            ? {
+                ...node,
+                // 解鎖要還原成 undefined 而非 true：React Flow 只有在 draggable
+                // 為 undefined 時才會沿用全域的 nodesDraggable，寫死 true 會讓
+                // 節點在前台唯讀模式也能被拖動
+                draggable: false === node.draggable ? undefined : false,
+              }
+            : node,
+        ),
+      )
+    },
+    [id, setNodes],
+  )
+
   // 設定旋轉角度
   const setTextRotate = useCallback(
     (rotate: TextRotate) => (e: React.MouseEvent) => {
@@ -668,7 +739,7 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
       {/* 節點大小調整器 - 選中時顯示 */}
       <NodeResizer
         color={currentColor.border}
-        isVisible={selected}
+        isVisible={selected && !isLocked}
         minWidth={120}
         minHeight={60}
         handleStyle={{
@@ -825,6 +896,69 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="12" y1="16" x2="12" y2="12"></line>
               <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </button>
+
+          {/* 圖層控制 */}
+          <div className="node-layer-group">
+            <button
+              type="button"
+              className="node-layer-btn"
+              onClick={changeLayer('back')}
+              title="移到最下層（背景，會落到連線下方）"
+            >
+              ⤓
+            </button>
+            <button
+              type="button"
+              className="node-layer-btn"
+              onClick={changeLayer('down')}
+              title="往下一層"
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              className="node-layer-btn"
+              onClick={changeLayer('up')}
+              title="往上一層"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              className="node-layer-btn"
+              onClick={changeLayer('front')}
+              title="移到最上層"
+            >
+              ⤒
+            </button>
+          </div>
+
+          {/* 鎖定按鈕 */}
+          <button
+            type="button"
+            className={`node-lock-btn ${isLocked ? 'active' : ''}`}
+            onClick={toggleLock}
+            title={isLocked ? '解除鎖定' : '鎖定位置與大小'}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              {isLocked ? (
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              ) : (
+                <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+              )}
             </svg>
           </button>
 

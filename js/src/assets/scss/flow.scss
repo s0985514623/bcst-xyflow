@@ -275,10 +275,62 @@
     z-index: 10;
   }
 
+  // 圖層控制：四顆併成一個膠囊，避免工具列變成一排零散圓鈕
+  .node-layer-group {
+    display: flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 2px;
+    background: #475569;
+    border: 2px solid white;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .node-layer-btn {
+      width: 16px;
+      height: 16px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      line-height: 1;
+      color: white;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.25);
+        border-radius: 3px;
+      }
+    }
+  }
+
+  .node-lock-btn {
+    background: #64748b;
+
+    &:hover {
+      background: #475569;
+    }
+
+    // 已鎖定時用琥珀色標示
+    &.active {
+      background: #f59e0b;
+
+      &:hover {
+        background: #d97706;
+      }
+    }
+  }
+
   .node-color-btn,
   .node-link-btn,
   .node-info-link-btn,
   .node-delete-btn,
+  .node-lock-btn,
   .node-text-style-btn {
     width: 20px;
     height: 20px;

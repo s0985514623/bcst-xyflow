@@ -1,6 +1,7 @@
 interface ToolbarProps {
   onAddNode: () => void
   onAddLine: () => void
+  onAddBackground: () => void
   onSave: () => void
   onClear: () => void
   isSaving: boolean
@@ -12,6 +13,7 @@ interface ToolbarProps {
 export default function Toolbar({
   onAddNode,
   onAddLine,
+  onAddBackground,
   onSave,
   onClear,
   isSaving,
@@ -65,6 +67,30 @@ export default function Toolbar({
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
           新增線條
+        </button>
+
+        <button
+          type="button"
+          className="toolbar-btn toolbar-btn-secondary"
+          onClick={onAddBackground}
+          disabled={isLoading}
+          title="建立位於最下層的背景區塊，可當作分區底色"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          新增背景區塊
         </button>
 
         <button

@@ -132,6 +132,33 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
     setNodes((prev) => [...prev, newNode])
   }, [readOnly])
 
+  // Add background block (edit mode only)
+  // 直接帶 zIndex: -1，才會落到連線圖層下方當底色；預設半透明，
+  // 讓使用者一眼看得出這是背景而不是一般節點
+  const addBackgroundNode = useCallback(() => {
+    if (readOnly) return
+    const newNode: Node = {
+      id: `node_${Date.now()}`,
+      type: 'editable',
+      position: {
+        x: Math.round(Math.random() * 120) + 40,
+        y: Math.round(Math.random() * 120) + 40,
+      },
+      width: 600,
+      height: 300,
+      zIndex: -1,
+      data: {
+        label: ' ',
+        color: {
+          bg: 'rgba(148, 163, 184, 0.25)',
+          border: '#cbd5e1',
+          text: '#334155',
+        },
+      },
+    }
+    setNodes((prev) => [...prev, newNode])
+  }, [readOnly])
+
   // Add new line (two endpoints + edge) (edit mode only)
   const addNewLine = useCallback(() => {
     if (readOnly) return
@@ -298,6 +325,7 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
         <Toolbar
           onAddNode={addNewNode}
           onAddLine={addNewLine}
+          onAddBackground={addBackgroundNode}
           onSave={handleSave}
           onClear={clearCanvas}
           isSaving={isSaving}
