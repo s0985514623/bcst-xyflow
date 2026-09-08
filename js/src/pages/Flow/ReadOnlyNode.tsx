@@ -4,6 +4,7 @@ import {
   DEFAULT_NODE_COLOR,
   DEFAULT_TEXT_STYLE,
   RichText,
+  getTextStyleCss,
   type EditableNodeData,
   type NodeColor,
   type TextStyle,
@@ -29,6 +30,9 @@ function ReadOnlyNode({ data }: ReadOnlyNodeProps) {
 
   // 當前文字樣式
   const currentTextStyle: TextStyle = data?.textStyle || DEFAULT_TEXT_STYLE
+
+  // 實際套用到文字上的 CSS（與 EditableNode 共用，確保前後台呈現一致）
+  const textCss = getTextStyleCss(currentTextStyle, currentColor.text)
 
   // 判斷是否為完全透明
   const isFullyTransparent =
@@ -150,17 +154,14 @@ function ReadOnlyNode({ data }: ReadOnlyNodeProps) {
           textAlign: currentTextStyle.textAlign || DEFAULT_TEXT_STYLE.textAlign,
         }}
       >
-        <span
-          className="node-label"
-          style={{
-            color: currentColor.text,
-            fontSize: currentTextStyle.fontSize || DEFAULT_TEXT_STYLE.fontSize,
-          }}
-        >
+        <span className="node-label" style={textCss}>
           <RichText
             text={data?.label || '未命名'}
             baseStyle={{
-              color: currentColor.text,
+              color: textCss.color,
+              fontWeight: textCss.fontWeight,
+              fontStyle: textCss.fontStyle,
+              textDecoration: textCss.textDecoration,
             }}
           />
         </span>

@@ -227,6 +227,8 @@
 
   .node-content {
     cursor: text;
+    // 文字旋轉時 .node-label 會改成 absolute，需要這裡當定位基準
+    position: relative;
   }
 
   .node-label {
@@ -365,7 +367,8 @@
   // 文字樣式編輯器
   .node-text-style-editor {
     position: absolute;
-    top: -90px;
+    // 以節點上緣為錨點往上長，面板增列時才不會反而蓋住節點
+    bottom: calc(100% + 8px);
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -417,6 +420,54 @@
       &:focus {
         border-color: #8b5cf6;
         box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+      }
+    }
+
+    // 文字顏色選擇器
+    .text-color-input {
+      flex: 1;
+      width: 100%;
+      height: 24px;
+      padding: 0;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+
+      &::-webkit-color-swatch-wrapper {
+        padding: 2px;
+      }
+
+      &::-webkit-color-swatch {
+        border: none;
+        border-radius: 2px;
+      }
+    }
+
+    .text-color-reset {
+      padding: 4px 6px;
+      font-size: 11px;
+      line-height: 1;
+      color: #64748b;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+
+      &:hover {
+        color: #334155;
+        background: #e2e8f0;
+      }
+    }
+
+    // 文字方向按鈕
+    .rotate-buttons {
+      flex: 1;
+
+      .rotate-btn {
+        font-size: 12px;
+        line-height: 1;
       }
     }
 
@@ -855,6 +906,8 @@
 
   .node-content {
     cursor: default;
+    // 文字旋轉時 .node-label 會改成 absolute，需要這裡當定位基準
+    position: relative;
   }
 
   .node-label {

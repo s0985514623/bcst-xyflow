@@ -1,4 +1,4 @@
-import { useCallback, useState, memo, useRef } from 'react'
+import { useCallback, useState, useEffect, memo, useRef } from 'react'
 import { Handle, Position, useReactFlow, NodeResizer } from '@xyflow/react'
 import React from 'react'
 
@@ -28,6 +28,17 @@ export interface NodeColor {
 // 文字對齊類型
 export type TextAlign = 'left' | 'center' | 'right'
 
+// 文字旋轉角度：0 = 水平，90 = 順時針直書，270 = 逆時針直書（由下往上讀）
+export type TextRotate = 0 | 90 | 270
+
+// 可選旋轉角度
+export const TEXT_ROTATES: { value: TextRotate; label: string; title: string }[] =
+  [
+    { value: 0, label: '橫', title: '水平' },
+    { value: 270, label: '↑', title: '直書（由下往上）' },
+    { value: 90, label: '↓', title: '直書（由上往下）' },
+  ]
+
 // 文字樣式介面
 export interface TextStyle {
   fontSize?: number // 字體大小 (px)
@@ -35,6 +46,8 @@ export interface TextStyle {
   italic?: boolean // 斜體
   underline?: boolean // 底線
   textAlign?: TextAlign // 對齊方式
+  color?: string // 文字顏色，未設定時沿用節點色系推導出的顏色
+  rotate?: TextRotate // 旋轉角度
 }
 
 // 預設文字樣式
@@ -44,6 +57,48 @@ export const DEFAULT_TEXT_STYLE: TextStyle = {
   italic: false,
   underline: false,
   textAlign: 'center',
+  rotate: 0,
+}
+
+/**
+ * 由 TextStyle 算出實際要套用在文字上的 CSS
+ *
+ * EditableNode 與 ReadOnlyNode 共用，避免兩邊呈現不一致
+ *
+ * @param textStyle     節點的文字樣式設定
+ * @param fallbackColor textStyle.color 未設定時要用的顏色（節點色系推導值）
+ * @return React.CSSProperties
+ */
+export function getTextStyleCss(
+  textStyle: TextStyle | undefined,
+  fallbackColor: string,
+): React.CSSProperties {
+  const style: TextStyle = { ...DEFAULT_TEXT_STYLE, ...textStyle }
+
+  // 用 || 而非直接取值：存檔資料若帶著明確的 undefined，物件展開會蓋掉預設值
+  const css: React.CSSProperties = {
+    color: style.color || fallbackColor,
+    fontSize: style.fontSize || DEFAULT_TEXT_STYLE.fontSize,
+    fontWeight: style.bold ? 700 : undefined,
+    fontStyle: style.italic ? 'italic' : undefined,
+    textDecoration: style.underline ? 'underline' : undefined,
+  }
+
+  // 旋轉時必須脫離文件流，否則文字會先被節點寬度擠到換行才旋轉。
+  // whiteSpace: pre 保留 label 裡的換行，但不自動斷行。
+  if (style.rotate === 90 || style.rotate === 270) {
+    css.position = 'absolute'
+    css.left = '50%'
+    css.top = '50%'
+    css.width = 'max-content'
+    css.whiteSpace = 'pre'
+    css.transformOrigin = 'center'
+    css.transform = `translate(-50%, -50%) rotate(${
+      style.rotate === 90 ? 90 : -90
+    }deg)`
+  }
+
+  return css
 }
 
 // 可選字體大小
@@ -237,13 +292,19 @@ export function RichText({ text, baseStyle = {} }: RichTextProps) {
           <React.Fragment key={lineIndex}>
             {lineIndex > 0 && <br />}
             {segments.map((segment, segIndex) => {
+              // 節點層級的底線與標記語法的刪除線要能疊加
+              const decorations = [
+                baseStyle.textDecoration,
+                segment.strikethrough ? 'line-through' : null,
+              ].filter(Boolean)
+
               const style: React.CSSProperties = {
                 ...baseStyle,
                 fontWeight: segment.bold ? 'bold' : baseStyle.fontWeight,
                 fontStyle: segment.italic ? 'italic' : baseStyle.fontStyle,
-                textDecoration: segment.strikethrough
-                  ? 'line-through'
-                  : baseStyle.textDecoration,
+                textDecoration: decorations.length
+                  ? decorations.join(' ')
+                  : undefined,
               }
 
               return (
@@ -288,6 +349,19 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
 
   // 當前文字樣式
   const currentTextStyle: TextStyle = data?.textStyle || DEFAULT_TEXT_STYLE
+
+  // 實際套用到文字上的 CSS
+  const textCss = getTextStyleCss(currentTextStyle, currentColor.text)
+
+  // 取消選取時關閉所有面板，避免點到別的節點後舊面板還浮在畫布上
+  useEffect(() => {
+    if (!selected) {
+      setShowColorPicker(false)
+      setShowLinkEditor(false)
+      setShowInfoLinkEditor(false)
+      setShowTextStyleEditor(false)
+    }
+  }, [selected])
 
   const handleDoubleClick = useCallback(() => {
     setIsEditing(true)
@@ -503,6 +577,32 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
     (align: TextAlign) => (e: React.MouseEvent) => {
       e.stopPropagation()
       updateTextStyle({ textAlign: align })
+    },
+    [updateTextStyle],
+  )
+
+  // 設定旋轉角度
+  const setTextRotate = useCallback(
+    (rotate: TextRotate) => (e: React.MouseEvent) => {
+      e.stopPropagation()
+      updateTextStyle({ rotate })
+    },
+    [updateTextStyle],
+  )
+
+  // 變更文字顏色
+  const handleTextColorChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      updateTextStyle({ color: e.target.value })
+    },
+    [updateTextStyle],
+  )
+
+  // 還原為依節點底色自動推導的文字顏色
+  const handleTextColorReset = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      updateTextStyle({ color: undefined })
     },
     [updateTextStyle],
   )
@@ -838,6 +938,45 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
               </svg>
             </button>
           </div>
+          {/* 文字顏色 */}
+          <div className="text-style-row">
+            <label className="text-style-label">文字色</label>
+            <input
+              type="color"
+              className="text-color-input"
+              value={currentTextStyle.color || currentColor.text}
+              onChange={handleTextColorChange}
+              onClick={(e) => e.stopPropagation()}
+              title="文字顏色"
+            />
+            <button
+              type="button"
+              className="text-color-reset"
+              onClick={handleTextColorReset}
+              title="依節點底色自動決定"
+            >
+              自動
+            </button>
+          </div>
+          {/* 文字方向 */}
+          <div className="text-style-row">
+            <label className="text-style-label">方向</label>
+            <div className="text-style-buttons rotate-buttons">
+              {TEXT_ROTATES.map((rotate) => (
+                <button
+                  key={rotate.value}
+                  type="button"
+                  className={`style-btn rotate-btn ${
+                    (currentTextStyle.rotate || 0) === rotate.value ? 'active' : ''
+                  }`}
+                  onClick={setTextRotate(rotate.value)}
+                  title={rotate.title}
+                >
+                  {rotate.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -974,23 +1113,24 @@ function EditableNode({ id, data, selected }: EditableNodeProps) {
             autoFocus
             rows={3}
             placeholder="使用 *斜體* **粗體** ~~刪除線~~"
+            // 編輯中的 textarea 沿用文字樣式但不套旋轉，旋轉狀態下打字無法使用
             style={{
-              fontSize: currentTextStyle.fontSize || DEFAULT_TEXT_STYLE.fontSize,
+              color: textCss.color,
+              fontSize: textCss.fontSize,
+              fontWeight: textCss.fontWeight,
+              fontStyle: textCss.fontStyle,
               textAlign: currentTextStyle.textAlign || DEFAULT_TEXT_STYLE.textAlign,
             }}
           />
         ) : (
-          <span
-            className="node-label"
-            style={{
-              color: currentColor.text,
-              fontSize: currentTextStyle.fontSize || DEFAULT_TEXT_STYLE.fontSize,
-            }}
-          >
+          <span className="node-label" style={textCss}>
             <RichText
               text={data?.label || '未命名'}
               baseStyle={{
-                color: currentColor.text,
+                color: textCss.color,
+                fontWeight: textCss.fontWeight,
+                fontStyle: textCss.fontStyle,
+                textDecoration: textCss.textDecoration,
               }}
             />
           </span>
