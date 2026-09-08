@@ -162,7 +162,13 @@ wp plugin activate r2-bcst-xyflow
 
 發佈產物在 `release/r2-bcst-xyflow/r2-bcst-xyflow/`，zip 是 `release/r2-bcst-xyflow.zip`（根目錄即 `r2-bcst-xyflow/`）。直接改 `r2-bcst-xyflow/` 沒有意義，下次 release 會被 `create-release.cjs` 的 `deleteRelease()` 蓋掉。
 
-**存取一律用 `http://bcst-blog.local`。** 用 https 登入時 `wp_set_auth_cookie()` 會把 cookie 設成 Secure，而 `wordpress_sec_*` 的 path 是 `/wp-admin` 送不到 `/wp-json/`，REST 會被當訪客導致 `wp_rest` nonce 驗不過（403 `rest_cookie_invalid_nonce`），後台 metabox 就顯示「載入失敗」。這也是 `yarn dev` 能用的前提 —— dev server 是 `http://localhost:5173`，https 頁面會被 mixed content 擋掉。
+**存取一律用 `https://bcst-blog.local`，登入與瀏覽不要混用 scheme。**
+
+後台 metabox 若出現「載入失敗：Failed to fetch flow data」，先懷疑登入 cookie 而不是外掛：REST 請求收不到 path 為 `/` 的 `wordpress_logged_in_*` 時，WP 會把請求當訪客，頁面上以登入身分產生的 `wp_rest` nonce 就驗不過，回 403 `rest_cookie_invalid_nonce`，而 `useFlowData.tsx` 只看 `!response.ok` 就丟出通用錯誤。此時 `/wp-admin` 本身仍進得去，因為它靠的是 path 為 `/wp-admin` 的 `wordpress_sec_*`——「後台開得起來但 metabox 掛掉」就是這個組合。重新登入一次把 cookie 補齊即可。
+
+DB 裡 `home` / `siteurl` 都是 `http://bcst-blog.local`，執行期由核心的 `get_home_url()` / `get_site_url()` 在 `is_ssl()` 為真時自動升級成 https，這是正常行為、不是設定衝突。
+
+副作用：`yarn dev` 的 dev server 跑在 `http://localhost:5173`，https 頁面會因 mixed content 擋掉它。要用 HMR 就得在 `vite.config.ts` 打開 `server.https`（repo 內的 `localhost+1.pem` / `localhost+1-key.pem` 已涵蓋 `localhost` 與 `bcst-blog.local`）；否則改完直接 `yarn build` 再重新整理驗證。
 
 ## 程式碼慣例
 
