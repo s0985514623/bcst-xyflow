@@ -26,7 +26,7 @@ plugin.php              外掛進入點。用 PluginTrait + SingletonTrait，
                         提供 Plugin::$dir / $url / $kebab / $snake / $app_name / $version
 inc/classes/
   Bootstrap.php         實例化 CPT / Entry / FlowApi；enqueue Vite 資產 + wp_localize_script
-  Admin/CPT.php         註冊 CPT `bcst`、後台 metabox 容器
+  Admin/CPT.php         註冊 CPT `bcst`、分類 taxonomy `bcst_category`、後台 metabox 容器
   Api/FlowApi.php       REST：GET/POST /wp-json/bcst-xyflow/v1/flow/{post_id}
   FrontEnd/Entry.php    shortcode [bcst_xyflow] + the_content 自動附加
   Utils/Base.php        常數：BASE_URL / APP1_SELECTOR / APP2_SELECTOR / API_TIMEOUT

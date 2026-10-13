@@ -22,6 +22,11 @@ final class CPT {
 	public const POST_TYPE = 'bcst';
 
 	/**
+	 * Taxonomy slug：BCST 分類
+	 */
+	public const TAXONOMY = 'bcst_category';
+
+	/**
 	 * Post metas
 	 *
 	 * @var array
@@ -68,6 +73,7 @@ final class CPT {
 	 * Initialize
 	 */
 	public function init(): void {
+		$this->register_taxonomy();
 		$this->register_cpt();
 
 		// add {$this->post_type}/{slug}/test rewrite rule
@@ -137,7 +143,7 @@ final class CPT {
 			'menu_icon'             => 'dashicons-networking',
 			'capability_type'       => 'post',
 			'supports'              => [ 'title', 'editor', 'thumbnail', 'custom-fields', 'author', 'excerpt' ],
-			'taxonomies'            => [],
+			'taxonomies'            => [ self::TAXONOMY ],
 			'rest_controller_class' => 'WP_REST_Posts_Controller',
 			'rewrite'               => [
 				'slug'       => 'bcst',
@@ -146,6 +152,50 @@ final class CPT {
 		];
 
 		\register_post_type( self::POST_TYPE, $args );
+	}
+
+	/**
+	 * Register bcst category taxonomy（階層式，類似文章分類）
+	 */
+	public static function register_taxonomy(): void {
+		$labels = [
+			'name'                  => \esc_html__( 'BCST 分類', 'bcst-xyflow' ),
+			'singular_name'         => \esc_html__( 'BCST 分類', 'bcst-xyflow' ),
+			'menu_name'             => \esc_html__( '分類', 'bcst-xyflow' ),
+			'all_items'             => \esc_html__( '全部分類', 'bcst-xyflow' ),
+			'edit_item'             => \esc_html__( '編輯分類', 'bcst-xyflow' ),
+			'view_item'             => \esc_html__( '檢視分類', 'bcst-xyflow' ),
+			'update_item'           => \esc_html__( '更新分類', 'bcst-xyflow' ),
+			'add_new_item'          => \esc_html__( '新增分類', 'bcst-xyflow' ),
+			'new_item_name'         => \esc_html__( '新分類名稱', 'bcst-xyflow' ),
+			'parent_item'           => \esc_html__( '上層分類', 'bcst-xyflow' ),
+			'parent_item_colon'     => \esc_html__( '上層分類：', 'bcst-xyflow' ),
+			'search_items'          => \esc_html__( '搜尋分類', 'bcst-xyflow' ),
+			'not_found'             => \esc_html__( '找不到分類', 'bcst-xyflow' ),
+			'no_terms'              => \esc_html__( '沒有分類', 'bcst-xyflow' ),
+			'back_to_items'         => \esc_html__( '← 返回分類', 'bcst-xyflow' ),
+			'items_list_navigation' => \esc_html__( '分類列表導覽', 'bcst-xyflow' ),
+			'items_list'            => \esc_html__( '分類列表', 'bcst-xyflow' ),
+			'filter_by_item'        => \esc_html__( '依分類篩選', 'bcst-xyflow' ),
+		];
+		$args   = [
+			'labels'            => $labels,
+			'public'            => true,
+			'hierarchical'      => true,
+			'show_ui'           => true,
+			'show_in_menu'      => true,
+			'show_in_nav_menus' => true,
+			'show_in_rest'      => true, // 區塊編輯器側欄需要
+			'show_admin_column' => true, // 後台列表顯示分類欄位
+			'query_var'         => true,
+			'rewrite'           => [
+				'slug'         => 'bcst-category',
+				'with_front'   => true,
+				'hierarchical' => true,
+			],
+		];
+
+		\register_taxonomy( self::TAXONOMY, [ self::POST_TYPE ], $args );
 	}
 
 	/**
