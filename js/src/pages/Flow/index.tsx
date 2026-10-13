@@ -346,6 +346,8 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
           edgeTypes={customEdgeTypes}
           defaultEdgeOptions={defaultEdgeOptions}
           fitView
+          // React Flow 預設 minZoom 為 0.5，大型流程圖會被卡住無法完整 fitView
+          minZoom={0.1}
           snapToGrid={!readOnly}
           snapGrid={[15, 15]}
           deleteKeyCode={readOnly ? null : ['Backspace', 'Delete']}
