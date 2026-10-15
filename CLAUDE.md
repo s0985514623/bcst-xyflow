@@ -106,10 +106,11 @@ Shortcode 用法：
 
 - 雙擊編輯文字（textarea，支援換行）；Ctrl/Cmd+Enter 儲存、Esc 取消
 - 輕量標記語法：`*斜體*`、`_斜體_`、`**粗體**`、`__粗體__`、`***粗斜體***`、`~~刪除線~~`
-- 文字樣式：字級（10–32px）、粗體／斜體／底線、左／中／右對齊
+- 文字樣式：字級（10–48px）、粗體／斜體／底線、左／中／右對齊
 - 顏色：10 色預設盤 + 自訂色（`<input type="color">`）+ 透明度滑桿；邊框色與文字色由背景亮度自動推導
 - 連結：`link` 站內連結（同頁跳轉）／`infoLink` 外部連結（節點下方 info 圖示，開新分頁）
 - `NodeResizer` 調整大小（minWidth 120 / minHeight 60）
+- 內距：所有節點預設 4px（`flow.scss` 的 `.editable-node` / `.readonly-node`，兩處須一致）；選填的 `data.padding`（px，經 `getNodePadding()` 套用）可逐節點覆蓋，目前沒有編輯 UI
 - 四個方向各一組 source + target Handle（`top`／`top-source` 等命名）
 
 樣式全寫在 `js/src/assets/scss/flow.scss`（**非** Tailwind），由 `index.scss` 匯入。元件內的 inline style 僅用於動態顏色／字級／對齊。

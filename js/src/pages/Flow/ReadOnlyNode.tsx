@@ -4,6 +4,7 @@ import {
   DEFAULT_NODE_COLOR,
   DEFAULT_TEXT_STYLE,
   RichText,
+  getNodePadding,
   getTextStyleCss,
   type EditableNodeData,
   type NodeColor,
@@ -85,6 +86,7 @@ function ReadOnlyNode({ data }: ReadOnlyNodeProps) {
       style={{
         backgroundColor: currentColor.bg,
         borderColor: currentColor.border,
+        padding: getNodePadding(data?.padding),
         cursor: currentLink ? 'pointer' : 'default',
       }}
       onClick={handleNodeClick}

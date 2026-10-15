@@ -102,7 +102,26 @@ export function getTextStyleCss(
 }
 
 // 可選字體大小
-export const FONT_SIZES = [10, 12, 13, 14, 16, 18, 20, 24, 28, 32]
+export const FONT_SIZES = [
+  10,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  20,
+  22,
+  24,
+  26,
+  28,
+  32,
+  36,
+  40,
+  44,
+  48,
+]
 
 export interface EditableNodeData {
   label?: string
@@ -110,6 +129,17 @@ export interface EditableNodeData {
   link?: string // 站內連結 URL（點擊節點跳轉，不開新分頁）
   infoLink?: string // 外部連結 URL（info 按鈕，開新分頁）
   textStyle?: TextStyle // 文字樣式
+  padding?: number // 節點內距 (px)，未設定時沿用 CSS 預設的 4px
+}
+
+/**
+ * 由 data.padding 算出節點容器的內距；未設定時回傳 undefined 交給 CSS
+ *
+ * @param {number | undefined} padding 節點內距 (px)
+ * @return {string | undefined} CSS padding 值
+ */
+export function getNodePadding(padding: number | undefined) {
+  return typeof padding === 'number' ? `${padding}px` : undefined
 }
 
 // 圖層（node.zIndex）可調整的範圍，避免反覆點擊後數值無限膨脹
@@ -734,6 +764,7 @@ function EditableNode({ id, data, selected, draggable }: EditableNodeProps) {
       style={{
         backgroundColor: currentColor.bg,
         borderColor: currentColor.border,
+        padding: getNodePadding(data?.padding),
       }}
     >
       {/* 節點大小調整器 - 選中時顯示 */}

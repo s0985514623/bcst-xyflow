@@ -177,7 +177,7 @@
 // Editable Node styles
 .editable-node {
   position: relative;
-  padding: 12px 16px;
+  padding: 4px; // 預設內距；data.padding 可逐節點覆蓋
   border-radius: 8px;
   background: white;
   border: 2px solid #e2e8f0;
@@ -934,7 +934,7 @@
 // Read-only Node styles
 .readonly-node {
   position: relative;
-  padding: 12px 16px;
+  padding: 4px; // 需與 .editable-node 一致，前後台排版才相同
   border-radius: 8px;
   background: white;
   border: 2px solid #e2e8f0;
