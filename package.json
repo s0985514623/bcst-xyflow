@@ -1,6 +1,6 @@
 {
   "name": "s0985514623-bcst-xyflow",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "type": "module",
   "scripts": {
     "bootstrap": "yarn install && composer install --no-interaction",
