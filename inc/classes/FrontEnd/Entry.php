@@ -25,6 +25,35 @@ final class Entry {
 		\add_shortcode( 'bcst_xyflow', [ $this, 'render_flow' ] );
 		// 自動在 bcst 文章類型的內容中顯示 Flow
 		\add_filter( 'the_content', [ $this, 'append_flow_to_content' ] );
+		// 文章有標籤時，在標題後加上「 - by 標籤名」
+		\add_filter( 'the_title', [ $this, 'append_tags_to_title' ], 10, 2 );
+	}
+
+	/**
+	 * Append post tags to title
+	 *
+	 * 例如：「我的文章 - by 標籤A、標籤B」
+	 *
+	 * @param string $title   Post title.
+	 * @param int    $post_id Post ID.
+	 * @return string
+	 */
+	public function append_tags_to_title( $title, $post_id = 0 ): string {
+		$title = (string) $title;
+
+		// 後台與 REST（區塊編輯器）不處理，避免改到編輯中的標題
+		if ( \is_admin() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+			return $title;
+		}
+
+		$tags = \get_the_tags( (int) $post_id );
+		if ( empty( $tags ) || \is_wp_error( $tags ) ) {
+			return $title;
+		}
+
+		$tag_names = array_map( static fn( $tag ) => \esc_html( $tag->name ), $tags );
+
+		return $title . ' - by ' . implode( '、', $tag_names );
 	}
 
 	/**
