@@ -17,6 +17,9 @@ use J7\WpReactPlugin\Admin\CPT;
 final class Entry {
 	use \J7WpReactPlugin\vendor\J7\WpUtils\Traits\SingletonTrait;
 
+	/** 標題後標籤 span 的 class */
+	const TITLE_TAGS_CLASS = 'bcst-xyflow-title-tags';
+
 	/**
 	 * Constructor
 	 */
@@ -25,8 +28,10 @@ final class Entry {
 		\add_shortcode( 'bcst_xyflow', [ $this, 'render_flow' ] );
 		// 自動在 bcst 文章類型的內容中顯示 Flow
 		\add_filter( 'the_content', [ $this, 'append_flow_to_content' ] );
-		// 文章有標籤時，在標題後加上「 - by 標籤名」
+		// 單篇文章頁的標題，文章有標籤時在後面加上「 - by 標籤名」
 		\add_filter( 'the_title', [ $this, 'append_tags_to_title' ], 10, 2 );
+		// 選單項目的標題同樣經過 the_title，要把標籤拿掉
+		\add_filter( 'wp_setup_nav_menu_item', [ $this, 'remove_tags_from_menu_item' ] );
 	}
 
 	/**
@@ -46,6 +51,12 @@ final class Entry {
 			return $title;
 		}
 
+		// 只處理單篇文章頁裡「當前這篇」的標題，
+		// 側欄、上一篇／下一篇、相關文章等其他文章的標題不加
+		if ( ! \is_single() || (int) $post_id !== \get_queried_object_id() ) {
+			return $title;
+		}
+
 		$tags = \get_the_tags( (int) $post_id );
 		if ( empty( $tags ) || \is_wp_error( $tags ) ) {
 			return $title;
@@ -54,10 +65,31 @@ final class Entry {
 		$tag_names = array_map( static fn( $tag ) => \esc_html( $tag->name ), $tags );
 
 		return sprintf(
-			'%s<span class="bcst-xyflow-title-tags" style="font-size: 28px;"> - by %s</span>',
+			'%s<span class="' . self::TITLE_TAGS_CLASS . '" style="font-size: 28px;"> - by %s</span>',
 			$title,
 			implode( '、', $tag_names )
 		);
+	}
+
+	/**
+	 * Remove appended tags from nav menu item title
+	 *
+	 * 選單項目沒有自訂標題時，WP 會用 get_the_title() 取文章標題，
+	 * 在該文章的單篇頁上就會帶到標籤，這裡把它移除。
+	 *
+	 * @param object $menu_item Nav menu item.
+	 * @return object
+	 */
+	public function remove_tags_from_menu_item( $menu_item ) {
+		if ( isset( $menu_item->title ) && is_string( $menu_item->title ) ) {
+			$menu_item->title = preg_replace(
+				'#<span class="' . self::TITLE_TAGS_CLASS . '"[^>]*>.*?</span>#s',
+				'',
+				$menu_item->title
+			);
+		}
+
+		return $menu_item;
 	}
 
 	/**
