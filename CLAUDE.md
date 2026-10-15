@@ -83,9 +83,10 @@ Shortcode 用法：
 ```
 [bcst_xyflow]                                        使用當前文章 ID
 [bcst_xyflow id="123"]                               指定文章 ID
-[bcst_xyflow id="123" width="100%" height="800px"]   指定尺寸（預設 100% / 600px）
+[bcst_xyflow id="123" width="100%" height="800px"]   指定尺寸（預設 100% / auto）
 ```
 
+- 唯讀畫布高度：容器沒有指定高度（或為 `auto`）時走自動高度——流程圖填滿畫布寬度，畫布高度依節點外框比例回推，上下只留 6px；`main.tsx` 的 `isAutoHeight()` 判斷後經 `App1` 傳 `autoHeight`。自動附加的 `#bcst_xyflow` 與未指定 height 的短碼都是 auto；短碼指定 height 時改為固定高度並以 `fitView({ padding: '6px' })` 取景。
 - Shortcode 透過 `data-post-id` 屬性把 postId 傳給 React；其他情況 fallback 到 `wp_localize_script` 注入的 `window.bcst_xyflow_data.env.postId`。
 - `main.tsx` 會跳過已被 shortcode 渲染過的節點，避免重複掛載。
 - 選擇器字串來自 `Utils/Base.php`，經 `wp_localize_script` 傳到前端的 `js/src/utils/env.tsx`。
@@ -94,7 +95,7 @@ Shortcode 用法：
 
 | 檔案 | 職責 |
 |---|---|
-| `pages/Flow/index.tsx` | `FlowEditor` + `ReactFlowProvider` wrapper。`readOnly` 決定 nodeTypes、Toolbar、MiniMap 與各項互動旗標；唯讀時 `fitView`，編輯時還原存檔的 viewport |
+| `pages/Flow/index.tsx` | `FlowEditor` + `ReactFlowProvider` wrapper。`readOnly` 決定 nodeTypes、Toolbar、MiniMap 與各項互動旗標；唯讀時由 `fitReadOnly` 取景（四周留白 `READONLY_PADDING` = 6px），編輯時還原存檔的 viewport |
 | `pages/Flow/EditableNode.tsx` | ★ 最大的檔（~1050 行）。同時 export 給 `ReadOnlyNode` 複用：`NODE_COLORS`、`DEFAULT_NODE_COLOR`、`DEFAULT_TEXT_STYLE`、`FONT_SIZES`、`RichText`、`processLabel` 及型別 `NodeColor` / `TextStyle` / `EditableNodeData` |
 | `pages/Flow/ReadOnlyNode.tsx` | 唯讀版節點。Handle 隱藏（opacity 0、`pointerEvents: none`）但**保留**，線條才連得上 |
 | `pages/Flow/CustomEdge.tsx` | 邊。垂直／水平（誤差 < 5px）走 `getStraightPath` 避免抖動，否則 `getSmoothStepPath`（borderRadius 8）；四種線型；額外一條 `strokeWidth={20}` 透明 path 擴大點擊區 |

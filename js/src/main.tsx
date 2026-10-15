@@ -17,6 +17,12 @@ const queryClient = new QueryClient({
   },
 })
 
+// 容器沒有指定高度（或為 auto）時，畫布高度改由流程圖比例決定
+const isAutoHeight = (el: Element) => {
+  const height = (el as HTMLElement).style.height
+  return !height || height === 'auto'
+}
+
 // 前台：支援短碼指定 post ID（class 選擇器）
 const shortcodeNodes = document.querySelectorAll('.bcst-xyflow-shortcode')
 
@@ -34,7 +40,10 @@ if (shortcodeNodes.length > 0) {
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
           <StyleProvider hashPriority="high">
-            <App1 postId={postId ? parseInt(postId, 10) : undefined} />
+            <App1
+              postId={postId ? parseInt(postId, 10) : undefined}
+              autoHeight={isAutoHeight(el)}
+            />
           </StyleProvider>
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
@@ -53,7 +62,7 @@ if (app1Nodes.length > 0) {
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
           <StyleProvider hashPriority="high">
-            <App1 />
+            <App1 autoHeight={isAutoHeight(el)} />
           </StyleProvider>
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>

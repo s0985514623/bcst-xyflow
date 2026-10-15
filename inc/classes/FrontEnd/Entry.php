@@ -42,6 +42,7 @@ final class Entry {
 	 * [bcst_xyflow] - 使用當前文章 ID
 	 * [bcst_xyflow id="123"] - 指定文章 ID
 	 * [bcst_xyflow id="123" height="800px" width="100%"] - 指定文章 ID 和尺寸
+	 * height 預設 auto：畫布高度依流程圖比例自動決定；指定數值時改為固定高度
 	 *
 	 * @param array $atts Shortcode attributes.
 	 * @return string
@@ -50,7 +51,7 @@ final class Entry {
 		$atts = \shortcode_atts(
 			[
 				'id'     => '', // 可指定 post ID，留空則使用當前文章
-				'height' => '600px',
+				'height' => 'auto',
 				'width'  => '100%',
 			],
 			$atts,
@@ -100,7 +101,7 @@ final class Entry {
 		}
 
 		$flow_container = sprintf(
-			'<div id="%s" class="bcst-xyflow-container" style="width: 100%%; height: 600px;"></div>',
+			'<div id="%s" class="bcst-xyflow-container" style="width: 100%%; height: auto;"></div>',
 			\esc_attr( Plugin::$snake )
 		);
 

@@ -1003,6 +1003,16 @@
   }
 }
 
+// 自動高度：高度由 .xyflow-canvas 的 inline height（依流程圖比例算出）撐開；
+// 選擇器要比下方 .readonly .xyflow-canvas { flex: 1 } 更明確才蓋得過
+.xyflow-container.readonly.auto-height {
+  height: auto;
+
+  .xyflow-canvas {
+    flex: none;
+  }
+}
+
 // Readonly container styles
 .xyflow-container.readonly {
   .xyflow-canvas {

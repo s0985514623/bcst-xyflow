@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useMemo } from 'react'
+import { useCallback, useState, useEffect, useMemo, useRef } from 'react'
 import {
   ReactFlow,
   applyNodeChanges,
@@ -15,6 +15,7 @@ import {
   MiniMap,
   useReactFlow,
   ReactFlowProvider,
+  getNodesBounds,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useGetFlowData, useSaveFlowData } from '@/hooks'
@@ -60,16 +61,88 @@ const defaultEdgeOptions = {
   },
 }
 
+// 唯讀畫布四周的留白 (px)
+const READONLY_PADDING = 6
+
+// 自動高度模式在流程圖尚未載入前的畫布高度 (px)
+const AUTO_HEIGHT_PLACEHOLDER = 400
+
+// 自動高度的上限：視窗高度的比例，避免直長型流程圖撐出好幾個螢幕高
+const AUTO_HEIGHT_MAX_RATIO = 0.85
+
 interface FlowEditorProps {
   readOnly?: boolean
   postId?: number
+  autoHeight?: boolean // 唯讀時畫布高度依流程圖比例自動決定（容器未指定高度時）
 }
 
 // 主要 Flow 編輯器組件
-function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
+function FlowEditor({
+  readOnly = false,
+  postId,
+  autoHeight = false,
+}: FlowEditorProps) {
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
   const { getViewport, setViewport, fitView } = useReactFlow()
+  const canvasRef = useRef<HTMLDivElement>(null)
+  const nodesRef = useRef<Node[]>(nodes)
+  nodesRef.current = nodes
+  const [canvasHeight, setCanvasHeight] = useState<number>()
+
+  // 唯讀模式的取景：四周只留 READONLY_PADDING。
+  // 自動高度時讓流程圖填滿畫布寬度，再依比例回推畫布高度，上下就不會多出留白；
+  // 但倍率不超過 1（不放大原圖），高度不超過視窗的 AUTO_HEIGHT_MAX_RATIO，
+  // 受限時改以高度為準並水平置中。
+  // 固定高度（短碼有指定 height）時退回 fitView。
+  // 用 setViewport 而非帶 duration 的動畫：背景分頁的 rAF 會被節流，動畫可能停在半途。
+  const fitReadOnly = useCallback(() => {
+    const canvas = canvasRef.current
+    const currentNodes = nodesRef.current
+    if (!canvas || currentNodes.length === 0) return
+
+    if (!autoHeight) {
+      fitView({ padding: `${READONLY_PADDING}px` })
+      return
+    }
+
+    const bounds = getNodesBounds(currentNodes)
+    const width = canvas.clientWidth
+    if (!width || !bounds.width) return
+
+    const maxHeight = Math.max(
+      AUTO_HEIGHT_PLACEHOLDER,
+      Math.round(window.innerHeight * AUTO_HEIGHT_MAX_RATIO),
+    )
+    const zoom = Math.min(
+      1,
+      (width - READONLY_PADDING * 2) / bounds.width,
+      (maxHeight - READONLY_PADDING * 2) / bounds.height,
+    )
+    setCanvasHeight(Math.ceil(bounds.height * zoom + READONLY_PADDING * 2))
+    setViewport({
+      x: (width - bounds.width * zoom) / 2 - bounds.x * zoom,
+      y: READONLY_PADDING - bounds.y * zoom,
+      zoom,
+    })
+  }, [autoHeight, fitView, setViewport])
+
+  // 畫布寬度改變（視窗縮放、RWD）時重新取景；
+  // 畫布在資料載入後才渲染，所以依 hasNodes 重新掛上 observer
+  const hasNodes = nodes.length > 0
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!readOnly || !canvas) return
+
+    let lastWidth = canvas.clientWidth
+    const observer = new ResizeObserver(() => {
+      if (canvas.clientWidth === lastWidth) return
+      lastWidth = canvas.clientWidth
+      fitReadOnly()
+    })
+    observer.observe(canvas)
+    return () => observer.disconnect()
+  }, [readOnly, fitReadOnly, hasNodes])
 
   // Fetch flow data from WordPress (使用傳入的 postId 或全域設定)
   const { data: flowResponse, isLoading, isError, error } = useGetFlowData(postId)
@@ -99,23 +172,18 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
         setEdges(savedEdges)
       }
 
-      // 在唯讀模式下，fitView 讓節點置中
+      // 在唯讀模式下，依畫布取景（見 fitReadOnly）
       // 在編輯模式下，恢復保存的 viewport
       if (readOnly) {
-        // 延遲執行 fitView 確保 React Flow 已準備好
-        // 不加 duration：帶動畫時 d3 transition 由 requestAnimationFrame 驅動，
-        // 頁面在背景分頁載入（例如「在新分頁開啟」）時 rAF 被節流，
-        // transition 的 end 事件不會觸發，畫面就停在未縮放的狀態。
-        setTimeout(() => {
-          fitView({ padding: 0.2 })
-        }, 150)
+        // 延遲執行確保 React Flow 已準備好
+        setTimeout(fitReadOnly, 150)
       } else if (viewport) {
         setTimeout(() => {
           setViewport(viewport)
         }, 100)
       }
     }
-  }, [flowResponse, setViewport, fitView, readOnly])
+  }, [flowResponse, setViewport, fitReadOnly, readOnly])
 
   // Add new node (edit mode only)
   const addNewNode = useCallback(() => {
@@ -319,7 +387,11 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
   }
 
   return (
-    <div className={`xyflow-container ${readOnly ? 'readonly' : ''}`}>
+    <div
+      className={`xyflow-container ${readOnly ? 'readonly' : ''} ${
+        readOnly && autoHeight ? 'auto-height' : ''
+      }`}
+    >
       {/* Only show toolbar in edit mode */}
       {!readOnly && (
         <Toolbar
@@ -335,7 +407,19 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
         />
       )}
 
-      <div className="xyflow-canvas">
+      <div
+        className="xyflow-canvas"
+        ref={canvasRef}
+        style={
+          readOnly && autoHeight
+            ? { height: canvasHeight ?? AUTO_HEIGHT_PLACEHOLDER }
+            : undefined
+        }
+      >
+        {/*
+          fitView：唯讀模式由 fitReadOnly 取景，避免內建 fitView 在節點量測後覆蓋。
+          minZoom：預設 0.5 會讓大型流程圖無法完整取景；窄螢幕下自動高度的倍率可能更低。
+        */}
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -345,9 +429,8 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
           nodeTypes={nodeTypes}
           edgeTypes={customEdgeTypes}
           defaultEdgeOptions={defaultEdgeOptions}
-          fitView
-          // React Flow 預設 minZoom 為 0.5，大型流程圖會被卡住無法完整 fitView
-          minZoom={0.1}
+          fitView={!readOnly}
+          minZoom={0.05}
           snapToGrid={!readOnly}
           snapGrid={[15, 15]}
           deleteKeyCode={readOnly ? null : ['Backspace', 'Delete']}
@@ -360,7 +443,20 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
           zoomOnScroll={true}
         >
           <Background color="#e2e8f0" gap={15} />
-          <Controls showInteractive={false} />
+          {/*
+            唯讀畫布四周只留 6px，左下角常壓到流程圖內容（如列標題），
+            改放右下角並橫排；「適合畫面」也沿用相同留白
+          */}
+          {readOnly ? (
+            <Controls
+              showInteractive={false}
+              position="bottom-right"
+              orientation="horizontal"
+              fitViewOptions={{ padding: `${READONLY_PADDING}px` }}
+            />
+          ) : (
+            <Controls showInteractive={false} />
+          )}
           {!readOnly && (
             <MiniMap
               nodeColor={(node) => {
@@ -392,13 +488,18 @@ function FlowEditor({ readOnly = false, postId }: FlowEditorProps) {
 interface FlowProps {
   readOnly?: boolean
   postId?: number
+  autoHeight?: boolean
 }
 
 // Wrapper component with ReactFlowProvider
-export default function Flow({ readOnly = false, postId }: FlowProps) {
+export default function Flow({
+  readOnly = false,
+  postId,
+  autoHeight = false,
+}: FlowProps) {
   return (
     <ReactFlowProvider>
-      <FlowEditor readOnly={readOnly} postId={postId} />
+      <FlowEditor readOnly={readOnly} postId={postId} autoHeight={autoHeight} />
     </ReactFlowProvider>
   )
 }
