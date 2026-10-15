@@ -53,7 +53,11 @@ final class Entry {
 
 		$tag_names = array_map( static fn( $tag ) => \esc_html( $tag->name ), $tags );
 
-		return $title . ' - by ' . implode( '、', $tag_names );
+		return sprintf(
+			'%s<span class="bcst-xyflow-title-tags" style="font-size: 28px;"> - by %s</span>',
+			$title,
+			implode( '、', $tag_names )
+		);
 	}
 
 	/**
